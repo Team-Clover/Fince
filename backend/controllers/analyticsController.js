@@ -1,6 +1,12 @@
 import Transaction from '../models/transactionModel.js';
 import User from '../models/userModel.js';
 
+// Helper: get YYYY-MM-DD string in local time (not UTC)
+const localDateStr = (d) => {
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
 export const getAnalytics = async (req, res) => {
   const userId = req.user._id || req.user.id;
 
@@ -19,20 +25,19 @@ export const getAnalytics = async (req, res) => {
 
     const transactions = await Transaction.find(filter).sort({ transactionDate: -1, date: -1 });
 
-    // 1. Daily spending trends (last 7 days)
+    // 1. Daily spending trends (last 7 days) — use local date to avoid UTC offset bugs
     const dailySpendingMap = {};
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0];
-      dailySpendingMap[dateStr] = 0;
+      dailySpendingMap[localDateStr(date)] = 0;
     }
 
     transactions.forEach(t => {
-      const dateObj = t.transactionDate || t.date || new Date();
-      const dateStr = dateObj.toISOString().split('T')[0];
-      if (dailySpendingMap[dateStr] !== undefined) {
-        dailySpendingMap[dateStr] += t.amount;
+      const dateObj = new Date(t.transactionDate || t.date || new Date());
+      const key = localDateStr(dateObj);
+      if (dailySpendingMap[key] !== undefined) {
+        dailySpendingMap[key] += t.amount;
       }
     });
 
@@ -41,19 +46,20 @@ export const getAnalytics = async (req, res) => {
       amount: Number(dailySpendingMap[date].toFixed(2))
     }));
 
-    // 2. Monthly spending (last 12 months)
+    // 2. Monthly spending (last 12 months) — use local month
     const monthlySpendingMap = {};
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     
     for (let i = 11; i >= 0; i--) {
       const d = new Date();
+      d.setDate(1); // avoid month-end overflow
       d.setMonth(d.getMonth() - i);
       const key = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
       monthlySpendingMap[key] = { amount: 0, monthIndex: d.getMonth(), year: d.getFullYear() };
     }
 
     transactions.forEach(t => {
-      const dateObj = t.transactionDate || t.date || new Date();
+      const dateObj = new Date(t.transactionDate || t.date || new Date());
       const key = `${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
       if (monthlySpendingMap[key] !== undefined) {
         monthlySpendingMap[key].amount += t.amount;
@@ -65,16 +71,15 @@ export const getAnalytics = async (req, res) => {
       amount: Number(monthlySpendingMap[key].amount.toFixed(2))
     }));
 
-    // 2.5 Yearly spending (last 5 years)
+    // 2.5 Yearly spending (last 5 years) — use local year
     const yearlySpendingMap = {};
     const currentYear = new Date().getFullYear();
     for (let i = 4; i >= 0; i--) {
-      const yearKey = (currentYear - i).toString();
-      yearlySpendingMap[yearKey] = 0;
+      yearlySpendingMap[(currentYear - i).toString()] = 0;
     }
 
     transactions.forEach(t => {
-      const dateObj = t.transactionDate || t.date || new Date();
+      const dateObj = new Date(t.transactionDate || t.date || new Date());
       const tYear = dateObj.getFullYear().toString();
       if (yearlySpendingMap[tYear] !== undefined) {
         yearlySpendingMap[tYear] += t.amount;

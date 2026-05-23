@@ -19,6 +19,7 @@ import {
 } from 'react-icons/fi';
 import { MdOutlineAccountBalanceWallet } from 'react-icons/md';
 import { FaPlus as FaPlusSolid, FaWandMagicSparkles, FaBrain, FaRegLightbulb } from 'react-icons/fa6';
+import { toast } from 'react-toastify';
 
 const API_URL = "http://localhost:4000";
 const COLORS = ['#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#3B82F6', '#6B7280', '#EF4444', '#14B8A6'];
@@ -128,13 +129,19 @@ const Dashboard = () => {
       }
       if (alertsRes.ok) {
         const alertsJson = await alertsRes.json();
-        setNotifications(alertsJson.map((alert, idx) => ({
+        const mapped = alertsJson.map((alert, idx) => ({
           id: alert._id || idx,
           title: alert.type === 'budget_exceeded' ? 'Budget Exceeded' : 'Budget Alert',
           desc: alert.message,
           time: new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           read: alert.read || false
-        })));
+        }));
+        setNotifications(mapped);
+        // Fire toast for each unread alert
+        const unread = mapped.filter(n => !n.read);
+        unread.forEach(n => {
+          toast.warn(`🔔 ${n.title}: ${n.desc}`, { toastId: n.id, autoClose: 5000 });
+        });
       }
 
       // 2. Fetch AI audit separately (since it can take longer depending on Gemini)
@@ -390,13 +397,14 @@ const Dashboard = () => {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (wellnessScore / 100) * circumference;
 
-  // Chart data calculations
+  // Chart data — always render; if all zero, show flat baseline
   const chartData = getChartData();
   let svgPath = '';
   let svgAreaPath = '';
   let trendLabels = [];
+  const hasData = chartData && chartData.length > 0;
 
-  if (chartData && chartData.some(d => d.amount > 0)) {
+  if (hasData) {
     const width = 400;
     const height = 100;
     const maxVal = Math.max(...chartData.map(d => d.amount), 1);
@@ -406,30 +414,28 @@ const Dashboard = () => {
       return { x, y };
     });
     
-    if (points.length > 0) {
-      if (points.length === 1) {
-        svgPath = `M 0 ${points[0].y} L 400 ${points[0].y}`;
-        svgAreaPath = `M 0 ${points[0].y} L 400 ${points[0].y} L 400 ${height} L 0 ${height} Z`;
-      } else {
-        let path = `M ${points[0].x} ${points[0].y}`;
-        for (let i = 0; i < points.length - 1; i++) {
-          const p0 = points[i];
-          const p1 = points[i + 1];
-          const cp1x = p0.x + (p1.x - p0.x) / 2;
-          const cp1y = p0.y;
-          const cp2x = p0.x + (p1.x - p0.x) / 2;
-          const cp2y = p1.y;
-          path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
-        }
-        svgPath = path;
-        svgAreaPath = `${svgPath} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
+    if (points.length === 1) {
+      svgPath = `M 0 ${points[0].y} L 400 ${points[0].y}`;
+      svgAreaPath = `M 0 ${points[0].y} L 400 ${points[0].y} L 400 ${height} L 0 ${height} Z`;
+    } else {
+      let path = `M ${points[0].x} ${points[0].y}`;
+      for (let i = 0; i < points.length - 1; i++) {
+        const p0 = points[i];
+        const p1 = points[i + 1];
+        const cp1x = p0.x + (p1.x - p0.x) / 2;
+        const cp1y = p0.y;
+        const cp2x = p0.x + (p1.x - p0.x) / 2;
+        const cp2y = p1.y;
+        path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
       }
+      svgPath = path;
+      svgAreaPath = `${svgPath} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
     }
     trendLabels = chartData.map(d => d.name);
   } else {
-    svgPath = 'M 0 95 L 400 95';
-    svgAreaPath = 'M 0 95 L 400 95 L 400 100 L 0 100 Z';
-    trendLabels = ['No Data', '', '', '', ''];
+    svgPath = 'M 0 90 L 400 90';
+    svgAreaPath = 'M 0 90 L 400 90 L 400 100 L 0 100 Z';
+    trendLabels = [];
   }
 
   // Categories Calculation
@@ -638,17 +644,21 @@ const Dashboard = () => {
                   <path d={svgPath} fill="none" stroke="#7c3aed" strokeWidth="4" vectorEffect="non-scaling-stroke" strokeOpacity="0.15" filter="url(#glow)" />
                   {/* Main stroke with gradient */}
                   <path d={svgPath} fill="none" stroke="url(#strokeGradient)" strokeWidth="2.5" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />
-                  {/* Animated end-dot */}
+                  {/* Animated end-dot — only show when there's real data */}
                   {(() => {
                     if (!chartData || chartData.length === 0) return null;
+                    if (!chartData.some(d => d.amount > 0)) return null;
                     const maxVal = Math.max(...chartData.map(d => d.amount), 1);
                     const lastIdx = chartData.length - 1;
+                    // Use the same formula as the path builder
                     const ex = lastIdx > 0 ? (lastIdx / lastIdx) * 400 : 200;
                     const ey = 100 - (chartData[lastIdx].amount / maxVal) * (100 - 20) - 10;
+                    // Correct x: last point in the sequence
+                    const correctX = chartData.length > 1 ? 400 : 200;
                     return (
                       <>
-                        <circle cx={ex} cy={ey} r="4" fill="#7c3aed" vectorEffect="non-scaling-stroke" />
-                        <circle cx={ex} cy={ey} r="7" fill="#7c3aed" fillOpacity="0.2" vectorEffect="non-scaling-stroke">
+                        <circle cx={correctX} cy={ey} r="4" fill="#7c3aed" vectorEffect="non-scaling-stroke" />
+                        <circle cx={correctX} cy={ey} r="7" fill="#7c3aed" fillOpacity="0.2" vectorEffect="non-scaling-stroke">
                           <animate attributeName="r" values="4;9;4" dur="2s" repeatCount="indefinite" />
                           <animate attributeName="fill-opacity" values="0.3;0;0.3" dur="2s" repeatCount="indefinite" />
                         </circle>

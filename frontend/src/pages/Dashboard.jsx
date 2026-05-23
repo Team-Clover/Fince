@@ -383,7 +383,7 @@ const Dashboard = () => {
   const overallRemaining = Math.max(overallLimit - overallSpent, 0);
   const overallPct = overallLimit > 0 ? ((overallRemaining / overallLimit) * 100).toFixed(0) : 0;
   const avgTrans = summary.transactionCount > 0 ? (summary.totalExpenses / summary.transactionCount).toFixed(0) : 0;
-  const estimatedTax = intelligence?.tax?.totalTaxPaid ?? 0;
+  const estimatedTax = intelligence?.tax?.estimatedGstPaid ?? 0;
 
   const wellnessScore = intelligence?.health?.score || 0;
   const radius = 40;

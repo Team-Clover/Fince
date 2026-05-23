@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { FiUser, FiSettings, FiMail, FiPhone, FiLock, FiBell, FiCheck, FiInfo } from 'react-icons/fi';
-import { FaWandMagicSparkles, FaRegLightbulb } from 'react-icons/fa6';
+import { useAuth } from '../context/AuthContext';
+
+const API_URL = "http://localhost:4000";
 
 const Settings = () => {
+  const { user } = useAuth();
+  
   // Tab states
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'preferences'
   
   // Profile settings state
-  const [fullName, setFullName] = useState('Saha');
-  const [username, setUsername] = useState('saha_fince');
-  const [email, setEmail] = useState('saha@fince.io');
-  const [phone, setPhone] = useState('+91 98765 43210');
+  const [fullName, setFullName] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
@@ -26,7 +30,16 @@ const Settings = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  const handleProfileSubmit = (e) => {
+  useEffect(() => {
+    if (user) {
+      setFullName(user.name || user.fullName || '');
+      setUsername(user.username || '');
+      setEmail(user.email || '');
+      setPhone(user.phone || '');
+    }
+  }, [user]);
+
+  const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
 
@@ -36,12 +49,36 @@ const Settings = () => {
     }
 
     setSaving(true);
-    setTimeout(() => {
-      setMessage({ type: 'success', text: 'Profile changes saved successfully!' });
-      setPassword('');
-      setConfirmPassword('');
+    try {
+      const response = await fetch(`${API_URL}/api/user/update-profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          token: localStorage.getItem('token') || ''
+        },
+        body: JSON.stringify({
+          fullName,
+          username,
+          email,
+          phone,
+          password
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setMessage({ type: 'success', text: 'Profile changes saved successfully!' });
+        setPassword('');
+        setConfirmPassword('');
+        // You could update AuthContext user here if we exposed a setUser method.
+      } else {
+        setMessage({ type: 'error', text: data.message || 'Error updating profile' });
+      }
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: 'error', text: 'Connection error' });
+    } finally {
       setSaving(false);
-    }, 800);
+    }
   };
 
   const handlePreferencesSubmit = (e) => {

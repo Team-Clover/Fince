@@ -1,17 +1,75 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from '../components/Sidebar.jsx';
-import { FiSend, FiPaperclip, FiMoreVertical, FiPlus, FiMessageSquare, FiEdit2, FiCheck, FiBell, FiChevronDown, FiTrash2 } from 'react-icons/fi';
-import { FaWandMagicSparkles, FaUser, FaBrain } from 'react-icons/fa6';
+import { FiSend, FiPaperclip, FiPlus, FiMessageSquare, FiEdit2, FiCheck, FiBell, FiTrash2, FiLoader } from 'react-icons/fi';
+import { FaWandMagicSparkles, FaBrain } from 'react-icons/fa6';
+import { useAuth } from '../context/AuthContext.jsx';
 import { INITIAL_CHATS } from '../Constants/Constants.js';
 
+const API_URL = "http://localhost:4000";
+
 const Chat = () => {
-  const [chats, setChats] = useState(INITIAL_CHATS);
-  const [activeChatId, setActiveChatId] = useState(1);
+  const { token, user } = useAuth();
+  const [chats, setChats] = useState([]);
+  const [activeChatId, setActiveChatId] = useState(null);
   const [inputText, setInputText] = useState("");
   const [editingChatId, setEditingChatId] = useState(null);
   const [editTitleText, setEditTitleText] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [chatLoading, setChatLoading] = useState(true);
+  const messagesEndRef = useRef(null);
 
   const activeChat = chats.find(c => c.id === activeChatId) || chats[0];
+
+  const fetchChatHistory = async () => {
+    setChatLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/ai/chat`, {
+        headers: {
+          token: token || localStorage.getItem('token') || ''
+        }
+      });
+      if (res.ok) {
+        const history = await res.json();
+        if (history && history.length > 0) {
+          const dbChat = {
+            id: 'db-chat',
+            title: "AI Financial Copilot",
+            date: "Today",
+            messages: history.map((h, index) => ({
+              id: h._id || index,
+              sender: h.role === 'user' ? 'user' : 'ai',
+              text: h.content || h.message,
+              time: h.createdAt 
+                ? new Date(h.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            }))
+          };
+          setChats([dbChat, ...INITIAL_CHATS.filter(c => c.id !== 1)]);
+          setActiveChatId('db-chat');
+        } else {
+          setChats(INITIAL_CHATS);
+          setActiveChatId(INITIAL_CHATS[0]?.id || 1);
+        }
+      } else {
+        setChats(INITIAL_CHATS);
+        setActiveChatId(INITIAL_CHATS[0]?.id || 1);
+      }
+    } catch (error) {
+      console.error('Error fetching chat history:', error);
+      setChats(INITIAL_CHATS);
+      setActiveChatId(INITIAL_CHATS[0]?.id || 1);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchChatHistory();
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chats, activeChatId, loading]);
 
   const handleNewChat = () => {
     const newChat = {
@@ -31,31 +89,178 @@ const Chat = () => {
     setEditingChatId(null);
   };
 
-  const handleSendMessage = () => {
-    if (!inputText.trim()) return;
+  const handleSendMessage = async (e) => {
+    if (e) e.preventDefault();
+    if (!inputText.trim() || loading) return;
+
+    const userMessageText = inputText;
+    setInputText("");
 
     const newMessage = {
       id: Date.now(),
       sender: 'user',
-      text: inputText,
+      text: userMessageText,
       time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
     };
 
-    const updatedChats = chats.map(chat => {
+    let updatedChats = chats.map(chat => {
       if (chat.id === activeChatId) {
-        // Auto-generate title based on content if it's a new conversation
         let newTitle = chat.title;
         if (chat.title === "New Conversation" && chat.messages.length === 1) {
-          const words = inputText.trim().split(' ');
-          newTitle = words.length > 3 ? words.slice(0, 3).join(' ') + '...' : inputText.trim();
+          const words = userMessageText.trim().split(' ');
+          newTitle = words.length > 3 ? words.slice(0, 3).join(' ') + '...' : userMessageText.trim();
         }
         return { ...chat, title: newTitle, messages: [...chat.messages, newMessage] };
       }
       return chat;
     });
-
     setChats(updatedChats);
-    setInputText("");
+
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/ai/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          token: token || localStorage.getItem('token') || ''
+        },
+        body: JSON.stringify({ message: userMessageText })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.aiResponse) {
+          const aiText = data.aiResponse.content || data.aiResponse.message || '';
+          
+          const aiMessage = {
+            id: Date.now() + 1,
+            sender: 'ai',
+            text: aiText,
+            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+          };
+          
+          setChats(prev => prev.map(chat => {
+            if (chat.id === activeChatId) {
+              return { ...chat, messages: [...chat.messages, aiMessage] };
+            }
+            return chat;
+          }));
+        }
+      } else {
+        const aiMessage = {
+          id: Date.now() + 1,
+          sender: 'ai',
+          text: 'Sorry, I encountered an issue processing your request. Please try again.',
+          time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        };
+        setChats(prev => prev.map(chat => {
+          if (chat.id === activeChatId) {
+            return { ...chat, messages: [...chat.messages, aiMessage] };
+          }
+          return chat;
+        }));
+      }
+    } catch (err) {
+      console.error('Error sending message:', err);
+      const aiMessage = {
+        id: Date.now() + 1,
+        sender: 'ai',
+        text: 'Network error connecting to the AI Assistant.',
+        time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+      };
+      setChats(prev => prev.map(chat => {
+        if (chat.id === activeChatId) {
+          return { ...chat, messages: [...chat.messages, aiMessage] };
+        }
+        return chat;
+      }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClearChat = async () => {
+    if (!window.confirm("Are you sure you want to clear this conversation?")) return;
+    
+    if (activeChatId === 'db-chat') {
+      try {
+        const res = await fetch(`${API_URL}/api/ai/chat`, {
+          method: 'DELETE',
+          headers: {
+            token: token || localStorage.getItem('token') || ''
+          }
+        });
+        if (res.ok) {
+          setChats(prev => prev.map(chat => {
+            if (chat.id === activeChatId) {
+              return { ...chat, messages: [] };
+            }
+            return chat;
+          }));
+        }
+      } catch (err) {
+        console.error('Error clearing DB chat:', err);
+      }
+    } else {
+      const filtered = chats.filter(c => c.id !== activeChatId);
+      setChats(filtered);
+      if (filtered.length > 0) {
+        setActiveChatId(filtered[0].id);
+      } else {
+        fetchChatHistory();
+      }
+    }
+  };
+
+  const renderMarkdown = (text) => {
+    if (!text) return null;
+    return text.split('\n').map((line, idx) => {
+      let isBullet = false;
+      let cleanLine = line;
+      if (line.trim().startsWith('- ') || line.trim().startsWith('* ')) {
+        isBullet = true;
+        cleanLine = line.trim().replace(/^[-*]\s+/, '');
+      }
+
+      const boldRegex = /\*\*(.*?)\*\*/g;
+      const parts = [];
+      let lastIndex = 0;
+      let match;
+      while ((match = boldRegex.exec(cleanLine)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(cleanLine.substring(lastIndex, match.index));
+        }
+        parts.push(<strong key={match.index} className="font-bold text-slate-900">{match[1]}</strong>);
+        lastIndex = boldRegex.lastIndex;
+      }
+      if (lastIndex < cleanLine.length) {
+        parts.push(cleanLine.substring(lastIndex));
+      }
+
+      const content = parts.length > 0 ? parts : cleanLine;
+
+      if (isBullet) {
+        return (
+          <li key={idx} className="ml-4 list-disc pl-1 mb-1 text-slate-600 font-medium">
+            {content}
+          </li>
+        );
+      }
+      
+      if (cleanLine.startsWith('###')) {
+        return <h5 key={idx} className="text-xs font-bold text-slate-800 mt-3 mb-1">{cleanLine.replace(/^###\s+/, '')}</h5>;
+      }
+      if (cleanLine.startsWith('##')) {
+        return <h4 key={idx} className="text-sm font-bold text-slate-900 mt-4 mb-1.5">{cleanLine.replace(/^##\s+/, '')}</h4>;
+      }
+      if (cleanLine.startsWith('#')) {
+        return <h3 key={idx} className="text-base font-bold text-slate-950 mt-5 mb-2">{cleanLine.replace(/^#\s+/, '')}</h3>;
+      }
+
+      if (cleanLine.trim() === '') return <div key={idx} className="h-1.5" />;
+
+      return <p key={idx} className="mb-1 text-slate-600 font-medium">{content}</p>;
+    });
   };
 
   return (
@@ -68,20 +273,17 @@ const Chat = () => {
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl -z-10 pointer-events-none translate-x-1/3 -translate-y-1/3"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl -z-10 pointer-events-none -translate-x-1/3 translate-y-1/3"></div>
 
-        {/* Top Header / Notification & Personal Section */}
+        {/* Top Header */}
         <div className="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">FINCE Intel Engine</h1>
-            <p className="text-slate-500 text-sm mt-1">Autonomous scenario simulation and auditing</p>
+            <h1 className="text-2xl font-bold text-slate-900">FINCE AI Copilot</h1>
+            <p className="text-slate-500 text-sm mt-1">Autonomous scenario simulation, tax auditing, and budgeting adviser</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-4 py-2 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-sm rounded-full">
               <div className="w-2 h-2 rounded-full bg-pink-500"></div>
-              Personal Space
+              {user?.userMode === 'family' ? 'Family Space' : user?.userMode === 'business' ? 'Business Space' : 'Personal Space'}
             </div>
-            <button className="p-2.5 bg-white border border-gray-200 text-slate-700 rounded-xl shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center">
-              <FiBell size={20} />
-            </button>
           </div>
         </div>
 
@@ -93,7 +295,7 @@ const Chat = () => {
             <div className="p-4 border-b border-gray-100">
               <button 
                 onClick={handleNewChat}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-gray-200 text-slate-700 font-bold text-xs rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-gray-200 text-slate-700 font-bold text-xs rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm cursor-pointer"
               >
                 <FiPlus size={14} />
                 New Scenario Chat
@@ -126,7 +328,7 @@ const Chat = () => {
                       ) : (
                         <button 
                           onClick={() => setActiveChatId(chat.id)}
-                          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-left ${
+                          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all text-left cursor-pointer ${
                             activeChatId === chat.id 
                               ? 'bg-white shadow-sm border border-gray-100 text-slate-900' 
                               : 'text-slate-500 hover:bg-gray-100/50 hover:text-slate-800'
@@ -146,7 +348,7 @@ const Chat = () => {
                             setEditingChatId(chat.id);
                             setEditTitleText(chat.title);
                           }}
-                          className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all ${
+                          className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all cursor-pointer ${
                             activeChatId === chat.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                           }`}
                         >
@@ -173,24 +375,15 @@ const Chat = () => {
                   <h1 className="text-sm font-bold text-slate-900">{activeChat?.title || "New Conversation"}</h1>
                   <p className="text-[10px] text-slate-500 flex items-center gap-1.5 font-semibold mt-0.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    FINCE INTEL ENGINE
+                    ACTIVE COGNITIVE ENGINE
                   </p>
                 </div>
               </div>
               
               <button 
-                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
                 title="Clear conversation logs"
-                onClick={() => {
-                  if (window.confirm("Clear this conversation?")) {
-                    setChats(chats.filter(c => c.id !== activeChatId));
-                    if (chats.length > 1) {
-                      setActiveChatId(chats.filter(c => c.id !== activeChatId)[0].id);
-                    } else {
-                      handleNewChat();
-                    }
-                  }
-                }}
+                onClick={handleClearChat}
               >
                 <FiTrash2 size={16} />
               </button>
@@ -199,7 +392,12 @@ const Chat = () => {
             {/* Chat Messages Area */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-gray-50/30">
               <div className="max-w-3xl mx-auto space-y-6 pb-4">
-                {activeChat?.messages.length === 0 ? (
+                {chatLoading ? (
+                  <div className="flex flex-col justify-center items-center h-48 gap-3">
+                    <FiLoader className="w-6 h-6 text-blue-600 animate-spin" />
+                    <span className="text-xs text-slate-500 font-mono">Loading conversation history...</span>
+                  </div>
+                ) : activeChat?.messages.length === 0 ? (
                   <div className="h-full flex flex-col justify-center items-center text-center space-y-4 pt-20">
                     <div className="w-14 h-14 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-blue-500 shadow-sm">
                       <FaWandMagicSparkles size={24} />
@@ -207,7 +405,7 @@ const Chat = () => {
                     <div>
                       <h4 className="font-bold text-sm text-slate-800">Ask FINCE AI anything</h4>
                       <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium max-w-sm mx-auto">
-                        "Analyze my latest grocery spends" or "Am I on track with my monthly budget limit?"
+                        "Analyze my latest grocery spends", "Am I on track with my monthly budget limit?", or ask for savings strategies.
                       </p>
                     </div>
                   </div>
@@ -227,12 +425,18 @@ const Chat = () => {
                         </div>
 
                         {/* Message Bubble */}
-                        <div className={`p-4 rounded-2xl text-[13px] leading-relaxed shadow-sm ${
+                        <div className={`p-4 rounded-2xl text-[13px] leading-relaxed shadow-sm text-left ${
                           isAI
                             ? 'bg-white border border-gray-100 text-slate-700 font-medium'
                             : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold'
                         }`}>
-                          <p>{msg.text}</p>
+                          {isAI ? (
+                            <div className="space-y-1">
+                              {renderMarkdown(msg.text)}
+                            </div>
+                          ) : (
+                            <p>{msg.text}</p>
+                          )}
                           <span className={`text-[9px] block mt-2 font-medium opacity-70 ${isAI ? 'text-gray-400' : 'text-blue-100'}`}>
                             {msg.time}
                           </span>
@@ -241,14 +445,31 @@ const Chat = () => {
                     );
                   })
                 )}
+
+                {loading && (
+                  <div className="flex gap-3 mr-auto text-left max-w-[85%]">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-[10px] font-bold border select-none bg-gradient-to-tr from-blue-50 to-purple-50 border-blue-100 text-blue-600">
+                      AI
+                    </div>
+                    <div className="p-4 rounded-2xl bg-white border border-gray-100 shadow-sm flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
               </div>
             </div>
 
             {/* Input Area */}
             <div className="p-4 bg-white border-t border-gray-100">
               <div className="max-w-4xl mx-auto">
-                <div className="relative flex items-center bg-[#F8FAFC] border border-gray-200 rounded-2xl p-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500/50 transition-all shadow-inner">
-                  <button className="p-2.5 text-gray-400 hover:text-blue-500 transition-colors rounded-xl">
+                <form 
+                  onSubmit={handleSendMessage}
+                  className="relative flex items-center bg-[#F8FAFC] border border-gray-200 rounded-2xl p-1.5 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500/50 transition-all shadow-inner"
+                >
+                  <button type="button" className="p-2.5 text-gray-400 hover:text-blue-500 transition-colors rounded-xl">
                     <FiPaperclip size={16} />
                   </button>
                   
@@ -258,19 +479,17 @@ const Chat = () => {
                     className="flex-1 bg-transparent border-none focus:ring-0 py-2.5 px-3 text-xs text-slate-700 placeholder-gray-400 font-semibold outline-none"
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSendMessage();
-                    }}
+                    disabled={loading}
                   />
                   
                   <button 
-                    onClick={handleSendMessage}
-                    disabled={!inputText.trim()}
-                    className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:shadow-blue-500/30 transition-all ml-1 flex-shrink-0 disabled:opacity-50"
+                    type="submit"
+                    disabled={!inputText.trim() || loading}
+                    className="w-9 h-9 flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:shadow-lg hover:shadow-blue-500/30 transition-all ml-1 flex-shrink-0 disabled:opacity-50 cursor-pointer"
                   >
                     <FiSend size={14} className="ml-0.5" />
                   </button>
-                </div>
+                </form>
                 <p className="text-center text-[9px] text-gray-400 mt-2 font-medium">
                   FINCE AI can make mistakes. Verify important financial events.
                 </p>

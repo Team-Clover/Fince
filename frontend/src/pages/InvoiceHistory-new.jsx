@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
 import {
   FiSearch,
   FiFilter,
@@ -137,9 +138,10 @@ const InvoiceHistory = () => {
       if (selectedInvoice && selectedInvoice._id === id) {
         setSelectedInvoice(null);
       }
+      toast.success("Invoice deleted");
     } catch (err) {
       console.error("Error deleting invoice:", err);
-      alert(err.message || "Failed to delete invoice");
+      toast.error(err.message || "Failed to delete invoice");
     }
   };
 

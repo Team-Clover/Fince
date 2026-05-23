@@ -10,6 +10,7 @@ import {
 import { FaWandMagicSparkles, FaPiggyBank } from "react-icons/fa6";
 import { useAuth } from "../context/AuthContext";
 import { budgetsAPI } from "../services/api.js";
+import { toast } from "react-toastify";
 
 const Budgets = () => {
   const { user, token } = useAuth();
@@ -179,9 +180,10 @@ const Budgets = () => {
       await budgetsAPI.deleteBudget(budgetId);
       // Immediately update UI
       setBudgets(budgets.filter((b) => b._id !== budgetId));
+      toast.success("Budget deleted");
     } catch (err) {
       console.error("Error deleting budget:", err);
-      alert(err.message || "Failed to delete budget");
+      toast.error(err.message || "Failed to delete budget");
     }
   };
 

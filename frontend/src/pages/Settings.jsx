@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { FiUser, FiSettings, FiMail, FiPhone, FiLock, FiBell, FiCheck, FiInfo } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
 const API_URL = "http://localhost:4000";
 
@@ -28,7 +29,6 @@ const Settings = () => {
   
   // Operational states
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState({ type: '', text: '' });
 
   useEffect(() => {
     if (user) {
@@ -41,10 +41,9 @@ const Settings = () => {
 
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
-    setMessage({ type: '', text: '' });
 
     if (password && password !== confirmPassword) {
-      setMessage({ type: 'error', text: 'Passwords do not match!' });
+      toast.error('Passwords do not match!');
       return;
     }
 
@@ -66,16 +65,15 @@ const Settings = () => {
       });
       const data = await response.json();
       if (data.success) {
-        setMessage({ type: 'success', text: 'Profile changes saved successfully!' });
+        toast.success('Profile changes saved successfully!');
         setPassword('');
         setConfirmPassword('');
-        // You could update AuthContext user here if we exposed a setUser method.
       } else {
-        setMessage({ type: 'error', text: data.message || 'Error updating profile' });
+        toast.error(data.message || 'Error updating profile');
       }
     } catch (err) {
       console.error(err);
-      setMessage({ type: 'error', text: 'Connection error' });
+      toast.error('Connection error');
     } finally {
       setSaving(false);
     }
@@ -85,7 +83,7 @@ const Settings = () => {
     e.preventDefault();
     setSaving(true);
     setTimeout(() => {
-      setMessage({ type: 'success', text: 'Cognitive workspace preferences synced successfully!' });
+      toast.success('Cognitive workspace preferences synced successfully!');
       setSaving(false);
     }, 800);
   };
@@ -115,18 +113,6 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* Message Alert Banner */}
-        {message.text && (
-          <div className={`p-4 rounded-xl text-xs font-semibold border mb-6 transition-all animate-fade-in flex items-center gap-2 ${
-            message.type === 'success' 
-              ? 'bg-emerald-50 text-emerald-705 border-emerald-200' 
-              : 'bg-rose-50 text-rose-705 border-rose-200'
-          }`}>
-            <FiInfo className="w-4 h-4 shrink-0" />
-            <span>{message.text}</span>
-          </div>
-        )}
-
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
           
           {/* Left Hand Navigation Menu Toggles */}
@@ -143,7 +129,7 @@ const Settings = () => {
 
             <div className="flex flex-col gap-2">
               <button
-                onClick={() => { setActiveTab('profile'); setMessage({ type: '', text: '' }); }}
+                onClick={() => { setActiveTab('profile'); }}
                 className={`flex items-center gap-3 py-2.5 px-4 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
                   activeTab === 'profile'
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md shadow-blue-500/10'
@@ -155,7 +141,7 @@ const Settings = () => {
               </button>
               
               <button
-                onClick={() => { setActiveTab('preferences'); setMessage({ type: '', text: '' }); }}
+                onClick={() => { setActiveTab('preferences'); }}
                 className={`flex items-center gap-3 py-2.5 px-4 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
                   activeTab === 'preferences'
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md shadow-blue-500/10'

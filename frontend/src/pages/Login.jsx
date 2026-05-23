@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import logo2 from "../assets/images/logo2.jpeg";
+import { toast } from 'react-toastify';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -11,7 +12,6 @@ const Login = () => {
     password: "",
   });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -23,10 +23,9 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage({ type: "", text: "" });
 
     if (!formData.email || !formData.password) {
-      setMessage({ type: "error", text: "Please fill in all fields!" });
+      toast.error("Please fill in all fields!");
       return;
     }
 
@@ -35,13 +34,13 @@ const Login = () => {
     const result = await login(formData.email, formData.password);
 
     if (result.success) {
-      setMessage({ type: "success", text: result.message || "Login successful!" });
+      toast.success(result.message || "Login successful!");
       // Redirect after delay
       setTimeout(() => {
         navigate("/dashboard");
       }, 1500);
     } else {
-      setMessage({ type: "error", text: result.message });
+      toast.error(result.message);
       setLoading(false);
     }
   };
@@ -70,19 +69,6 @@ const Login = () => {
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Welcome Back</h1>
           <p className="text-xs text-slate-500 mt-1 font-medium">Sign in to manage your financial workspace</p>
         </div>
-
-        {/* Alerts */}
-        {message.text && (
-          <div
-            className={`mb-6 p-4 rounded-xl text-xs border font-semibold transition duration-300 animate-scale-up ${
-              message.type === "success"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                : "bg-rose-50 text-rose-700 border-rose-200"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-6">

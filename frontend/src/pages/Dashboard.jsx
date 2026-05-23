@@ -609,16 +609,52 @@ const Dashboard = () => {
                 <span>Max</span><span>75%</span><span>50%</span><span>25%</span><span>0</span>
               </div>
               <div className="ml-8 h-full border-b border-gray-100 relative">
-                <svg viewBox="0 0 400 100" className="w-full h-full" preserveAspectRatio="none">
+                <svg viewBox="0 0 400 100" className="w-full h-full" preserveAspectRatio="none" style={{ overflow: 'visible' }}>
                   <defs>
                     <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.35" />
+                      <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.45" />
+                      <stop offset="70%" stopColor="#8b5cf6" stopOpacity="0.1" />
                       <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.0" />
                     </linearGradient>
+                    <linearGradient id="strokeGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#6366f1" />
+                      <stop offset="100%" stopColor="#a855f7" />
+                    </linearGradient>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+                      <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
                   </defs>
-                  {/* Glowing dynamic path */}
-                  <path d={svgPath} fill="none" stroke="#8b5cf6" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+                  {/* Subtle horizontal grid lines */}
+                  {[25, 50, 75].map(pct => (
+                    <line key={pct} x1="0" y1={100 - pct} x2="400" y2={100 - pct} stroke="#e2e8f0" strokeWidth="0.5" vectorEffect="non-scaling-stroke" strokeDasharray="4 4" />
+                  ))}
+                  {/* Filled gradient area */}
                   <path d={svgAreaPath} fill="url(#purpleGradient)" />
+                  {/* Glowing shadow path */}
+                  <path d={svgPath} fill="none" stroke="#7c3aed" strokeWidth="4" vectorEffect="non-scaling-stroke" strokeOpacity="0.15" filter="url(#glow)" />
+                  {/* Main stroke with gradient */}
+                  <path d={svgPath} fill="none" stroke="url(#strokeGradient)" strokeWidth="2.5" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />
+                  {/* Animated end-dot */}
+                  {(() => {
+                    if (!chartData || chartData.length === 0) return null;
+                    const maxVal = Math.max(...chartData.map(d => d.amount), 1);
+                    const lastIdx = chartData.length - 1;
+                    const ex = lastIdx > 0 ? (lastIdx / lastIdx) * 400 : 200;
+                    const ey = 100 - (chartData[lastIdx].amount / maxVal) * (100 - 20) - 10;
+                    return (
+                      <>
+                        <circle cx={ex} cy={ey} r="4" fill="#7c3aed" vectorEffect="non-scaling-stroke" />
+                        <circle cx={ex} cy={ey} r="7" fill="#7c3aed" fillOpacity="0.2" vectorEffect="non-scaling-stroke">
+                          <animate attributeName="r" values="4;9;4" dur="2s" repeatCount="indefinite" />
+                          <animate attributeName="fill-opacity" values="0.3;0;0.3" dur="2s" repeatCount="indefinite" />
+                        </circle>
+                      </>
+                    );
+                  })()}
                 </svg>
                 <div className="absolute bottom-[-20px] left-0 w-full flex justify-between text-[10px] text-gray-400">
                   {trendLabels.map((label, idx) => (
@@ -680,10 +716,10 @@ const Dashboard = () => {
                         <span className="capitalize">{cat.name}</span>
                         <span>₹{cat.value.toLocaleString()} ({pct}%)</span>
                       </div>
-                      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                         <div 
-                          className="h-full rounded-full" 
-                          style={{ width: `${pct}%`, backgroundColor: COLORS[idx % COLORS.length] }}
+                          className="h-full rounded-full transition-all duration-700 ease-out" 
+                          style={{ width: `${pct}%`, backgroundColor: COLORS[idx % COLORS.length], boxShadow: `0 0 6px ${COLORS[idx % COLORS.length]}55` }}
                         />
                       </div>
                     </div>

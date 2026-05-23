@@ -13,6 +13,7 @@ import {
 } from "react-icons/fi";
 import { FaWandMagicSparkles, FaBrain } from "react-icons/fa6";
 import { useAuth } from "../context/AuthContext.jsx";
+import { toast } from "react-toastify";
 import { chatAPI } from "../services/api.js";
 
 const Chat = () => {
@@ -115,6 +116,7 @@ const Chat = () => {
       setChats(chats.filter((c) => c.id !== id));
       if (activeChatId === id) {
         setActiveChatId(chats.length > 1 ? chats[0].id : null);
+        toast.success("Conversation deleted");
       }
     }
   };

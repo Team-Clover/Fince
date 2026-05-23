@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import logo2 from "../assets/images/logo2.jpeg";
+import { toast } from 'react-toastify';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -16,7 +17,6 @@ const Register = () => {
     userMode: "individual",
   });
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ type: "", text: "" });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -28,7 +28,6 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage({ type: "", text: "" });
 
     // Validate inputs
     if (
@@ -39,12 +38,12 @@ const Register = () => {
       !formData.confirmPassword ||
       !formData.userMode
     ) {
-      setMessage({ type: "error", text: "Please fill in all fields!" });
+      toast.error("Please fill in all fields!");
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setMessage({ type: "error", text: "Passwords do not match!" });
+      toast.error("Passwords do not match!");
       return;
     }
 
@@ -59,16 +58,13 @@ const Register = () => {
     });
 
     if (result.success) {
-      setMessage({
-        type: "success",
-        text: result.message || "Registration successful! Redirecting...",
-      });
+      toast.success(result.message || "Registration successful! Redirecting...");
       // Redirect after delay
       setTimeout(() => {
         navigate("/login");
       }, 2000);
     } else {
-      setMessage({ type: "error", text: result.message });
+      toast.error(result.message);
       setLoading(false);
     }
   };
@@ -97,19 +93,6 @@ const Register = () => {
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Create an Account</h1>
           <p className="text-xs text-slate-500 mt-1 font-medium">Get started with your Fince financial workspace</p>
         </div>
-
-        {/* Alerts */}
-        {message.text && (
-          <div
-            className={`mb-6 p-4 rounded-xl text-xs border font-semibold transition duration-300 animate-scale-up ${
-              message.type === "success"
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                : "bg-rose-50 text-rose-700 border-rose-200"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
 
         {/* Registration Form */}
         <form onSubmit={handleSubmit} className="space-y-5">

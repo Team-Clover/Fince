@@ -15,6 +15,7 @@ import {
   FiUser,
 } from "react-icons/fi";
 import { LuScan } from "react-icons/lu";
+import { toast } from 'react-toastify';
 
 const API_URL = "http://localhost:4000";
 
@@ -28,7 +29,7 @@ const UploadInvoice = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState(""); // kept for inline OCR stage display
 
   // Simulated OCR Streaming progress & logs state
   const [ocrProgress, setOcrProgress] = useState(0);
@@ -94,16 +95,19 @@ const UploadInvoice = () => {
     const extension = file.name.split(".").pop().toLowerCase();
 
     if (!filetypes.test(extension)) {
+      toast.error("Invalid file format. Please upload JPEG, PNG, or PDF.");
       setErrorMsg("Invalid file format. Please upload JPEG, PNG, or PDF.");
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
+      toast.error("File is too large. Max size allowed is 10MB.");
       setErrorMsg("File is too large. Max size allowed is 10MB.");
       return;
     }
 
     setSelectedFile(file);
+    toast.success(`File "${file.name}" ready to process!`, { autoClose: 2000 });
   };
 
   // Upload handling with a simulated log stream for premium feel
@@ -200,7 +204,9 @@ const UploadInvoice = () => {
     } catch (err) {
       clearInterval(interval);
       console.error(err);
-      setErrorMsg(err.message || "Error processing invoice. Please try again.");
+      const msg = err.message || "Error processing invoice. Please try again.";
+      setErrorMsg(msg);
+      toast.error(msg);
       setStage("upload");
     } finally {
       setUploadLoading(false);
@@ -278,11 +284,13 @@ const UploadInvoice = () => {
         throw new Error(data.message || "Failed to confirm invoice details");
       }
 
-      alert("Invoice successfully confirmed and logged in ledger!");
-      navigate("/dashboard");
+      toast.success("Invoice confirmed and logged in ledger!");
+      setTimeout(() => navigate("/dashboard"), 1500);
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.message || "Failed to complete transaction.");
+      const msg = err.message || "Failed to complete transaction.";
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setUploadLoading(false);
     }

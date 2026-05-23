@@ -1,23 +1,22 @@
 import express from 'express';
+import cors from 'cors';
 import dotenv from 'dotenv';
+import connectDB from './config/db.js';
+import userRouter from './routes/userRoute.js';
+
 dotenv.config();
 
 const app = express();
 
-//mongodb connection
-import connectDB from './config/db.js';
-connectDB();
-
-const PORT = process.env.PORT || 3001;
-
+// Middleware
+app.use(cors());
 app.use(express.json());
 
-//routes
-import userRoute from './routes/userRoute.js';
-app.use('/api/user', userRoute);
+// MongoDB connection
+connectDB();
 
-
-
+// Routes
+app.use('/api/user', userRouter);
 
 app.get('/', (req, res) => {
     res.send('Hello, World!');

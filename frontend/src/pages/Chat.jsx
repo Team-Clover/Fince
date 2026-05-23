@@ -16,7 +16,7 @@ const Chat = () => {
   const [editTitleText, setEditTitleText] = useState("");
   const [loading, setLoading] = useState(false);
   const [chatLoading, setChatLoading] = useState(true);
-  const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
   const activeChat = chats.find(c => c.id === activeChatId) || chats[0];
 
@@ -68,7 +68,12 @@ const Chat = () => {
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
   }, [chats, activeChatId, loading]);
 
   const handleNewChat = () => {
@@ -390,7 +395,7 @@ const Chat = () => {
             </header>
 
             {/* Chat Messages Area */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-gray-50/30">
+            <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-gray-50/30">
               <div className="max-w-3xl mx-auto space-y-6 pb-4">
                 {chatLoading ? (
                   <div className="flex flex-col justify-center items-center h-48 gap-3">
@@ -458,7 +463,7 @@ const Chat = () => {
                     </div>
                   </div>
                 )}
-                <div ref={messagesEndRef} />
+
               </div>
             </div>
 

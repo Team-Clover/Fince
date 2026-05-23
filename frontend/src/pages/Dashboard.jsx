@@ -427,6 +427,7 @@ const Dashboard = () => {
   const totalCategorySpent = categoryDistribution.reduce((sum, c) => sum + c.value, 0) || 1;
 
   // AI intelligence fields
+
   let forecastProjections = [];
   if (intelligence?.forecasting && typeof intelligence.forecasting === 'object' && !Array.isArray(intelligence.forecasting)) {
     const forecastingObj = intelligence.forecasting;

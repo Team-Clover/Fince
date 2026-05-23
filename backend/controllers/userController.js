@@ -1,13 +1,13 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
-import cloudinary from "../lib/cloudinary.js";
-import generateToken from "../lib/utils.js";
+import cloudinary from "../config/cloudinary.js";
+import generateToken from "../config/utils.js";
 
 // Signup a new user
 export const signup = async (req, res) => {
-  const { fullName, email, password, bio } = req.body;
+  const { fullName, email, password, phone, userMode } = req.body;
   try {
-    if (!fullName || !email || !password || !bio) {
+    if (!fullName || !email || !password || !phone) {
       return res.json({ success: false, message: "Missing Details" });
     }
 
@@ -27,7 +27,8 @@ export const signup = async (req, res) => {
       fullName,
       email,
       password: hashedPassword,
-      bio,
+      phone,
+      userMode: userMode || "individual",
     });
 
     const token = generateToken(newUser._id);
@@ -78,7 +79,7 @@ export const checkAuth = async (req, res) => {
 // Controller to update user profile details
 export const updateProfile = async (req, res) => {
   try {
-    const { profilePic, bio, fullName } = req.body;
+    const { profilePic, phone, userMode, fullName } = req.body;
 
     const userId = req.user._id;
     let updatedUser;
@@ -86,7 +87,7 @@ export const updateProfile = async (req, res) => {
     if (!profilePic) {
       updatedUser = await User.findByIdAndUpdate(
         userId,
-        { bio, fullName },
+        { phone, userMode, fullName },
         { new: true },
       );
     } else {
@@ -94,12 +95,22 @@ export const updateProfile = async (req, res) => {
 
       updatedUser = await User.findByIdAndUpdate(
         userId,
-        { profilePic: upload.secure_url, bio, fullName },
+        { profilePic: upload.secure_url, phone, userMode, fullName },
         { new: true },
       );
     }
 
     return res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.log(error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// Controller to logout a user
+export const logout = async (req, res) => {
+  try {
+    return res.json({ success: true, message: "Logged out successfully" });
   } catch (error) {
     console.log(error.message);
     res.json({ success: false, message: error.message });

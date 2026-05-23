@@ -427,18 +427,40 @@ const Dashboard = () => {
   const totalCategorySpent = categoryDistribution.reduce((sum, c) => sum + c.value, 0) || 1;
 
   // AI intelligence fields
-  const defaultProjections = [
-    { category: 'Groceries', projectedNextMonth: summary.monthlyExpenses * 0.15, risk: 'LOW', confidence: 92 },
-    { category: 'Utilities', projectedNextMonth: summary.monthlyExpenses * 0.08, risk: 'LOW', confidence: 95 },
-    { category: 'Entertainment', projectedNextMonth: summary.monthlyExpenses * 0.05, risk: 'LOW', confidence: 88 }
-  ];
-  const forecastProjections = Array.isArray(intelligence?.forecasting) ? intelligence.forecasting : defaultProjections;
 
-  const defaultWealth = [
-    { title: 'Optimize Subscriptions', category: 'Fixed Costs', action: 'Consider auditing duplicate SaaS or utility charges to immediately increase safety net savings.', priority: 'MEDIUM', impact: 'High Impact' },
-    { title: 'Tax Strategy Allocation', category: 'Taxation', action: 'Ensure proper corporate or individual invoicing documentation is preserved for dynamic tax claims.', priority: 'LOW', impact: 'Medium Impact' }
-  ];
-  const wealthRecommendations = Array.isArray(intelligence?.wealth) ? intelligence.wealth : defaultWealth;
+  let forecastProjections = [];
+  if (intelligence?.forecasting && typeof intelligence.forecasting === 'object' && !Array.isArray(intelligence.forecasting)) {
+    const forecastingObj = intelligence.forecasting;
+    const catForecasts = forecastingObj.categoryForecasts || {};
+    const riskIndicators = forecastingObj.riskIndicators || {};
+    
+    forecastProjections = Object.keys(catForecasts).map(cat => ({
+      category: cat,
+      projectedNextMonth: catForecasts[cat]?.projectedNextMonth || 0,
+      risk: riskIndicators[cat]?.overrunProbability || 'LOW',
+      confidence: riskIndicators[cat]?.confidence || 85
+    }));
+  } else if (Array.isArray(intelligence?.forecasting)) {
+    forecastProjections = intelligence.forecasting;
+  } else {
+    forecastProjections = [
+      { category: 'Groceries', projectedNextMonth: summary.monthlyExpenses * 0.15, risk: 'LOW', confidence: 92 },
+      { category: 'Utilities', projectedNextMonth: summary.monthlyExpenses * 0.08, risk: 'LOW', confidence: 95 },
+      { category: 'Entertainment', projectedNextMonth: summary.monthlyExpenses * 0.05, risk: 'LOW', confidence: 88 }
+    ];
+  }
+
+  let wealthRecommendations = [];
+  if (intelligence?.wealth && typeof intelligence.wealth === 'object' && !Array.isArray(intelligence.wealth)) {
+    wealthRecommendations = intelligence.wealth.recommendationsList || [];
+  } else if (Array.isArray(intelligence?.wealth)) {
+    wealthRecommendations = intelligence.wealth;
+  } else {
+    wealthRecommendations = [
+      { title: 'Optimize Subscriptions', category: 'Fixed Costs', action: 'Consider auditing duplicate SaaS or utility charges to immediately increase safety net savings.', priority: 'MEDIUM', impact: 'High Impact' },
+      { title: 'Tax Strategy Allocation', category: 'Taxation', action: 'Ensure proper corporate or individual invoicing documentation is preserved for dynamic tax claims.', priority: 'LOW', impact: 'Medium Impact' }
+    ];
+  }
 
   const reportNarrative = intelligence?.narrative || `### Financial Narrative\nLog transactions or upload invoices to kickstart your personalized AI narration feed! Currently, you have logged ${summary.transactionCount} transactions.`;
 

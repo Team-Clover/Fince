@@ -133,6 +133,19 @@ const invoiceSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    gstVerification: {
+      status: { type: String, enum: ['VERIFIED', 'INVALID', 'UNVERIFIED'], default: 'UNVERIFIED' },
+      businessName: { type: String, default: '' },
+      taxpayerType: { type: String, default: '' },
+      stateCode: { type: String, default: '' },
+      message: { type: String, default: '' },
+      calculatedTaxMismatch: { type: Boolean, default: false },
+      isFakeInvoice: { type: Boolean, default: false }
+    },
+    fraudScore: {
+      type: Number,
+      default: 0
+    },
     status: {
       type: String,
       enum: ['pending', 'processing', 'completed', 'failed'],

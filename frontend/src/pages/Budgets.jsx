@@ -266,6 +266,85 @@ const Budgets = () => {
                   <p className="text-xs text-slate-500">Visual share comparison across categorized limits (in ₹)</p>
                 </div>
                 
+                {/* Smooth Curve SVG Graph */}
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 relative h-64 overflow-hidden mt-4">
+                  <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-gray-400 py-6 px-4">
+                    <span>Max</span><span>75%</span><span>50%</span><span>25%</span><span>0</span>
+                  </div>
+                  <div className="ml-10 h-full border-b border-l border-gray-200 relative pt-6 pb-6">
+                    <svg viewBox="0 0 400 100" className="w-full h-full" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="spentGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+                          <stop offset="100%" stopColor="#ef4444" stopOpacity="0.0" />
+                        </linearGradient>
+                        <linearGradient id="limitGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+                          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+                      {(() => {
+                        const width = 400;
+                        const height = 100;
+                        const maxVal = Math.max(
+                          ...budgets.map((b) => Math.max(b.limit, b.spent)),
+                          1
+                        );
+                        
+                        const limitPoints = budgets.map((b, i) => ({
+                          x: budgets.length > 1 ? (i / (budgets.length - 1)) * width : width / 2,
+                          y: height - (b.limit / maxVal) * (height - 10) - 5,
+                        }));
+
+                        const spentPoints = budgets.map((b, i) => ({
+                          x: budgets.length > 1 ? (i / (budgets.length - 1)) * width : width / 2,
+                          y: height - (b.spent / maxVal) * (height - 10) - 5,
+                        }));
+
+                        const buildSmoothPath = (pts) => {
+                          if (pts.length === 0) return '';
+                          if (pts.length === 1) return `M 0 ${pts[0].y} L ${width} ${pts[0].y}`;
+                          let p = `M ${pts[0].x} ${pts[0].y}`;
+                          for (let i = 0; i < pts.length - 1; i++) {
+                            const p0 = pts[i], p1 = pts[i + 1];
+                            const cp1x = p0.x + (p1.x - p0.x) / 2, cp1y = p0.y;
+                            const cp2x = p0.x + (p1.x - p0.x) / 2, cp2y = p1.y;
+                            p += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
+                          }
+                          return p;
+                        };
+
+                        const limitPath = buildSmoothPath(limitPoints);
+                        const limitAreaPath = limitPoints.length > 0 ? `${limitPath} L ${limitPoints[limitPoints.length - 1].x} ${height} L ${limitPoints[0].x} ${height} Z` : '';
+                        
+                        const spentPath = buildSmoothPath(spentPoints);
+                        const spentAreaPath = spentPoints.length > 0 ? `${spentPath} L ${spentPoints[spentPoints.length - 1].x} ${height} L ${spentPoints[0].x} ${height} Z` : '';
+
+                        return (
+                          <>
+                            <path d={limitAreaPath} fill="url(#limitGradient)" />
+                            <path d={limitPath} fill="none" stroke="#3b82f6" strokeWidth="2.5" vectorEffect="non-scaling-stroke" strokeDasharray="5,5" />
+                            
+                            <path d={spentAreaPath} fill="url(#spentGradient)" />
+                            <path d={spentPath} fill="none" stroke="#ef4444" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+                          </>
+                        );
+                      })()}
+                    </svg>
+                    <div className="absolute bottom-[-20px] left-0 w-full flex justify-between text-[10px] text-gray-400">
+                      {budgets.map((b, idx) => (
+                        <span key={idx} className="truncate max-w-[50px] text-center" title={b.category}>
+                          {b.category.substring(0, 5)}..
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex justify-center gap-4 mt-8 text-[10px] font-bold">
+                    <span className="flex items-center gap-1 text-blue-500"><div className="w-2 h-2 rounded-full bg-blue-500"></div> Budget Limit</span>
+                    <span className="flex items-center gap-1 text-red-500"><div className="w-2 h-2 rounded-full bg-red-500"></div> Amount Spent</span>
+                  </div>
+                </div>
+                
                 {/* Responsive CSS grid-based bar chart */}
                 <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
                   <div className="space-y-5">

@@ -411,7 +411,17 @@ const Dashboard = () => {
         svgPath = `M 0 ${points[0].y} L 400 ${points[0].y}`;
         svgAreaPath = `M 0 ${points[0].y} L 400 ${points[0].y} L 400 ${height} L 0 ${height} Z`;
       } else {
-        svgPath = `M ${points[0].x} ${points[0].y} ` + points.slice(1).map(p => `L ${p.x} ${p.y}`).join(' ');
+        let path = `M ${points[0].x} ${points[0].y}`;
+        for (let i = 0; i < points.length - 1; i++) {
+          const p0 = points[i];
+          const p1 = points[i + 1];
+          const cp1x = p0.x + (p1.x - p0.x) / 2;
+          const cp1y = p0.y;
+          const cp2x = p0.x + (p1.x - p0.x) / 2;
+          const cp2y = p1.y;
+          path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p1.x} ${p1.y}`;
+        }
+        svgPath = path;
         svgAreaPath = `${svgPath} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
       }
     }

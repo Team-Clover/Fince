@@ -243,11 +243,16 @@ const Dashboard = () => {
     e.preventDefault();
     setManualError('');
     if (!manualMerchant || !manualAmount || !manualDate || !manualCategory) {
-      setManualError('Merchant, amount, date and category are required.');
+      toast.error('Merchant, amount, date and category are required.');
+      return;
+    }
+    if (isNaN(manualAmount) || Number(manualAmount) <= 0) {
+      toast.error('Please enter a valid amount greater than 0.');
       return;
     }
 
     setManualLoading(true);
+    const toastId = toast.loading('Logging expense...');
     try {
       const res = await fetch(`${API_URL}/api/invoices/manual`, {
         method: 'POST',
@@ -269,6 +274,13 @@ const Dashboard = () => {
         throw new Error(data.message || 'Failed to log spending manually.');
       }
 
+      toast.update(toastId, {
+        render: `✅ ₹${Number(manualAmount).toLocaleString()} expense logged for ${manualMerchant}!`,
+        type: 'success',
+        isLoading: false,
+        autoClose: 3000
+      });
+
       setManualMerchant('');
       setManualAmount('');
       setManualDate(new Date().toISOString().split('T')[0]);
@@ -280,6 +292,12 @@ const Dashboard = () => {
       fetchDashboardData();
     } catch (err) {
       setManualError(err.message);
+      toast.update(toastId, {
+        render: err.message || 'Failed to log expense.',
+        type: 'error',
+        isLoading: false,
+        autoClose: 4000
+      });
     } finally {
       setManualLoading(false);
     }

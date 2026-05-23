@@ -17,6 +17,7 @@ import {
   FiBell,
 } from "react-icons/fi";
 import { LuScan } from "react-icons/lu";
+import { toast } from "react-toastify";
 
 const API_URL = "http://localhost:4000";
 
@@ -127,13 +128,8 @@ const InvoiceHistory = () => {
     fetchAlerts();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this invoice? This will also remove the associated ledger transaction."
-      )
-    )
-      return;
+  const handleDelete = async (id, merchantName) => {
+    const toastId = toast.loading("Deleting record...");
     try {
       const res = await fetch(`${API_URL}/api/invoices/${id}`, {
         method: "DELETE",
@@ -147,9 +143,28 @@ const InvoiceHistory = () => {
         if (selectedInvoice && selectedInvoice._id === id) {
           setSelectedInvoice(null);
         }
+        toast.update(toastId, {
+          render: `🗑️${merchantName ? ` "${merchantName}"` : " Invoice"} deleted from ledger.`,
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
+      } else {
+        toast.update(toastId, {
+          render: data.message || "Delete failed.",
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
       }
     } catch (err) {
       console.error("Error deleting invoice:", err);
+      toast.update(toastId, {
+        render: "Connection error.",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
     }
   };
 
@@ -420,7 +435,7 @@ const InvoiceHistory = () => {
                                   <FiEye className="w-4 h-4" />
                                 </button>
                                 <button
-                                  onClick={() => handleDelete(inv._id)}
+                                  onClick={() => handleDelete(inv._id, inv.merchantName)}
                                   className="p-2 rounded-xl border border-red-100 bg-red-50/30 text-red-500 hover:text-red-700 hover:bg-red-100/60 transition-all cursor-pointer flex items-center justify-center"
                                   title="Delete Record"
                                 >

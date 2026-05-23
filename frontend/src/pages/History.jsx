@@ -15,6 +15,7 @@ import {
   FiChevronDown,
   FiUser
 } from 'react-icons/fi';
+import { toast } from 'react-toastify';
 
 const API_URL = 'http://localhost:4000';
 
@@ -103,8 +104,8 @@ const History = () => {
     }
   }, [token]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this invoice? This will also remove the associated ledger transaction.')) return;
+  const handleDelete = async (id, merchantName) => {
+    const toastId = toast.loading('Deleting record...');
     try {
       const res = await fetch(`${API_URL}/api/invoices/${id}`, {
         method: 'DELETE',
@@ -119,10 +120,21 @@ const History = () => {
           if (selectedInvoice && selectedInvoice._id === id) {
             setSelectedInvoice(null);
           }
+          toast.update(toastId, {
+            render: `🗑️${merchantName ? ` "${merchantName}"` : ' Invoice'} deleted from ledger.`,
+            type: 'success',
+            isLoading: false,
+            autoClose: 3000
+          });
+        } else {
+          toast.update(toastId, { render: data.message || 'Delete failed.', type: 'error', isLoading: false, autoClose: 3000 });
         }
+      } else {
+        toast.update(toastId, { render: 'Server error. Could not delete.', type: 'error', isLoading: false, autoClose: 3000 });
       }
     } catch (err) {
       console.error('Error deleting invoice:', err);
+      toast.update(toastId, { render: 'Connection error.', type: 'error', isLoading: false, autoClose: 3000 });
     }
   };
 
@@ -383,7 +395,7 @@ const History = () => {
                                   <FiEye className="w-4 h-4" />
                                 </button>
                                 <button
-                                  onClick={() => handleDelete(inv._id)}
+                                  onClick={() => handleDelete(inv._id, inv.merchantName)}
                                   className="p-1.5 rounded-lg border border-red-100 bg-red-50 text-red-600 hover:text-red-700 hover:bg-red-100 transition-colors cursor-pointer"
                                   title="Delete"
                                 >

@@ -4,10 +4,8 @@ import { FiUser, FiSettings, FiMail, FiPhone, FiLock, FiBell, FiCheck, FiInfo } 
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 
-const API_URL = "http://localhost:4000";
-
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, updateUserProfile } = useAuth();
   
   // Tab states
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'preferences'
@@ -30,9 +28,10 @@ const Settings = () => {
   // Operational states
   const [saving, setSaving] = useState(false);
 
+  // Populate form fields whenever the user object changes (on load or after save)
   useEffect(() => {
     if (user) {
-      setFullName(user.name || user.fullName || '');
+      setFullName(user.fullName || user.name || '');
       setUsername(user.username || '');
       setEmail(user.email || '');
       setPhone(user.phone || '');
@@ -47,36 +46,29 @@ const Settings = () => {
       return;
     }
 
-    setSaving(true);
-    try {
-      const response = await fetch(`${API_URL}/api/user/update-profile`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          token: localStorage.getItem('token') || ''
-        },
-        body: JSON.stringify({
-          fullName,
-          username,
-          email,
-          phone,
-          password
-        })
-      });
-      const data = await response.json();
-      if (data.success) {
-        toast.success('Profile changes saved successfully!');
-        setPassword('');
-        setConfirmPassword('');
-      } else {
-        toast.error(data.message || 'Error updating profile');
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error('Connection error');
-    } finally {
-      setSaving(false);
+    if (password && password.length < 6) {
+      toast.error('Password must be at least 6 characters.');
+      return;
     }
+
+    setSaving(true);
+    // Use the AuthContext helper — saves to DB AND updates in-memory user immediately
+    const result = await updateUserProfile({
+      fullName,
+      username,
+      email,
+      phone,
+      ...(password ? { password } : {})
+    });
+
+    if (result.success) {
+      toast.success('Profile saved and synced!');
+      setPassword('');
+      setConfirmPassword('');
+    } else {
+      toast.error(result.message || 'Error updating profile');
+    }
+    setSaving(false);
   };
 
   const handlePreferencesSubmit = (e) => {
@@ -87,6 +79,7 @@ const Settings = () => {
       setSaving(false);
     }, 800);
   };
+
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F8FAFC] text-slate-800 font-sans">

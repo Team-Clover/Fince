@@ -85,28 +85,33 @@ export const checkAuth = async (req, res) => {
 // Controller to update user profile details
 export const updateProfile = async (req, res) => {
   try {
-    const { profilePic, phone, userMode, fullName } = req.body;
-
+    const { fullName, email, phone, password, username } = req.body;
     const userId = req.user._id;
-    let updatedUser;
 
-    if (!profilePic) {
-      updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { phone, userMode, fullName },
-        { new: true },
-      );
-    } else {
-      const upload = await cloudinary.uploader.upload(profilePic);
+    // Build the update object with only provided fields
+    const updateFields = {};
+    if (fullName)  updateFields.fullName = fullName.trim();
+    if (email)     updateFields.email = email.trim().toLowerCase();
+    if (phone)     updateFields.phone = phone.trim();
+    if (username)  updateFields.username = username.trim();
 
-      updatedUser = await User.findByIdAndUpdate(
-        userId,
-        { profilePic: upload.secure_url, phone, userMode, fullName },
-        { new: true },
-      );
+    // Handle password separately (hash it)
+    if (password && password.trim().length >= 6) {
+      const salt = await bcrypt.genSalt(10);
+      updateFields.password = await bcrypt.hash(password, salt);
     }
 
-    return res.json({ success: true, user: updatedUser });
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      updateFields,
+      { new: true, select: '-password' } // never return password hash
+    );
+
+    if (!updatedUser) {
+      return res.json({ success: false, message: 'User not found' });
+    }
+
+    return res.json({ success: true, user: updatedUser, message: 'Profile updated successfully' });
   } catch (error) {
     console.log(error.message);
     res.json({ success: false, message: error.message });

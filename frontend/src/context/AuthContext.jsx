@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
 
+const API_URL = "http://localhost:4000";
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);
@@ -13,7 +15,7 @@ export const AuthProvider = ({ children }) => {
       const storedToken = localStorage.getItem("token");
       if (storedToken) {
         try {
-          const response = await fetch("http://localhost:4000/api/user/profile", {
+          const response = await fetch(`${API_URL}/api/user/profile`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -44,7 +46,7 @@ export const AuthProvider = ({ children }) => {
   // Login handler
   const login = async (email, password) => {
     try {
-      const response = await fetch("http://localhost:4000/api/user/login", {
+      const response = await fetch(`${API_URL}/api/user/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,7 +73,7 @@ export const AuthProvider = ({ children }) => {
   // Register/Signup handler
   const register = async (userData) => {
     try {
-      const response = await fetch("http://localhost:4000/api/user/register", {
+      const response = await fetch(`${API_URL}/api/user/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -95,6 +97,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Update user profile — saves to DB and immediately syncs in-memory user
+  const updateUserProfile = async (fields) => {
+    try {
+      const response = await fetch(`${API_URL}/api/user/update-profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          token: localStorage.getItem("token") || "",
+        },
+        body: JSON.stringify(fields),
+      });
+      const data = await response.json();
+      if (data.success) {
+        // Immediately update in-memory user so UI reflects changes without refresh
+        setUser(data.user);
+        return { success: true, message: data.message || "Profile updated" };
+      } else {
+        return { success: false, message: data.message || "Update failed" };
+      }
+    } catch (error) {
+      console.error("Update profile error:", error);
+      return { success: false, message: "Server connection failed" };
+    }
+  };
+
   // Logout handler
   const logout = () => {
     setUser(null);
@@ -103,7 +130,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, token, loading, login, register, logout, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

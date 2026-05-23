@@ -1,0 +1,549 @@
+import React, { useState, useEffect, useRef } from "react";
+import Sidebar from "../components/Sidebar";
+import { useAuth } from "../context/AuthContext";
+import {
+  FiSearch,
+  FiFilter,
+  FiTrash2,
+  FiEye,
+  FiCalendar,
+  FiTag,
+  FiFileText,
+  FiArrowDown,
+  FiDownload,
+  FiX,
+  FiUser,
+  FiLoader,
+  FiBell,
+} from "react-icons/fi";
+import { LuScan } from "react-icons/lu";
+
+const API_URL = "http://localhost:4000";
+
+const InvoiceHistory = () => {
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Search / Filter / Sort State
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [sortBy, setSortBy] = useState("date_desc");
+
+  // Details Modal State
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+
+  // Notifications State
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: "Invoice parsed successfully",
+      desc: "Gemini completed extracting details for Invoice #1024.",
+      time: "2m ago",
+      read: false,
+    },
+    {
+      id: 2,
+      title: "Budget alert",
+      desc: "You have reached 85% of your 'Groceries' budget.",
+      time: "1h ago",
+      read: false,
+    },
+    {
+      id: 3,
+      title: "New transaction",
+      desc: "₹12,500.00 added to ledger from Google Pay.",
+      time: "1d ago",
+      read: true,
+    },
+  ]);
+  const notificationRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        notificationRef.current &&
+        !notificationRef.current.contains(event.target)
+      ) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const categories = [
+    "Food",
+    "Travel",
+    "Utilities",
+    "Cloud Infrastructure",
+    "Subscriptions",
+    "Medical",
+    "Shopping",
+    "Entertainment",
+    "Operations",
+    "Housing",
+    "Groceries",
+    "Others",
+  ];
+
+  const fetchInvoices = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/invoices`, {
+        headers: {
+          token: localStorage.getItem("token") || "",
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setInvoices(data.invoices || []);
+      }
+    } catch (err) {
+      console.error("Error fetching invoices:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
+  const handleDelete = async (id) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this invoice? This will also remove the associated ledger transaction."
+      )
+    )
+      return;
+    try {
+      const res = await fetch(`${API_URL}/api/invoices/${id}`, {
+        method: "DELETE",
+        headers: {
+          token: localStorage.getItem("token") || "",
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setInvoices((prev) => prev.filter((invoice) => invoice._id !== id));
+        if (selectedInvoice && selectedInvoice._id === id) {
+          setSelectedInvoice(null);
+        }
+      }
+    } catch (err) {
+      console.error("Error deleting invoice:", err);
+    }
+  };
+
+  // Helper to extract clean filename from relative fileUrl path
+  const getCleanFileName = (fileUrl) => {
+    if (!fileUrl) return "Document";
+    const base = fileUrl.split("/").pop();
+    // remove the prepended timestamp (e.g. 1716...-)
+    return base.replace(/^\d+-/, "");
+  };
+
+  // Filter & Sort computation
+  const processedInvoices = invoices
+    .filter((inv) => {
+      const cleanName = getCleanFileName(inv.fileUrl);
+      const merchantMatch = inv.merchantName
+        ?.toLowerCase()
+        .includes(search.toLowerCase());
+      const filenameMatch = cleanName
+        ?.toLowerCase()
+        .includes(search.toLowerCase());
+      const categoryMatch =
+        categoryFilter === "" ||
+        inv.category?.toLowerCase() === categoryFilter.toLowerCase();
+      return (merchantMatch || filenameMatch) && categoryMatch;
+    })
+    .sort((a, b) => {
+      const amtA = a.totalAmount || 0;
+      const amtB = b.totalAmount || 0;
+      const dateA = new Date(a.invoiceDate || a.createdAt);
+      const dateB = new Date(b.invoiceDate || b.createdAt);
+
+      if (sortBy === "date_desc") return dateB - dateA;
+      if (sortBy === "date_asc") return dateA - dateB;
+      if (sortBy === "amount_desc") return amtB - amtA;
+      if (sortBy === "amount_asc") return amtA - amtB;
+      return 0;
+    });
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-[#F8FAFC] text-slate-800 font-sans">
+      <Sidebar />
+
+      <main className="flex-1 p-8 md:p-12 overflow-y-auto h-full relative">
+        {/* Background ambient light */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl -z-10 pointer-events-none translate-x-1/3 -translate-y-1/3"></div>
+
+        {/* Sticky top header matching reference layout */}
+        <header className="flex h-16 border-b border-slate-100 px-8 items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10 -mx-8 -mt-8 mb-8 md:-mx-12 md:-mt-12">
+          <div className="flex items-center gap-4">
+            <h2 className="font-outfit text-xl font-bold tracking-wide text-slate-900">
+              Invoice History
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-4 relative" ref={notificationRef}>
+            <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-[10px] rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
+              <span>+ Personal Space</span>
+            </div>
+
+            {/* Notification Bell Icon */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="p-2.5 rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:bg-slate-50 relative flex items-center justify-center cursor-pointer"
+              >
+                <FiBell className="w-5 h-5 text-slate-700" />
+                {notifications.some((n) => !n.read) && (
+                  <span className="absolute top-2 right-2.5 w-2.5 h-2.5 rounded-full bg-red-500 border border-white" />
+                )}
+              </button>
+
+              {/* White Notifications Popup Panel */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-2.5 w-80 bg-white border border-slate-200 shadow-xl rounded-2xl p-4 z-50 animate-scale-up text-left">
+                  <div className="flex justify-between items-center border-b border-slate-100 pb-2 mb-3">
+                    <span className="font-bold text-sm text-slate-900 font-outfit">
+                      Notifications
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setNotifications(
+                          notifications.map((n) => ({ ...n, read: true }))
+                        )
+                      }
+                      className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer"
+                    >
+                      Mark all read
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                    {notifications.length === 0 ? (
+                      <div className="text-center text-xs text-slate-400 py-6 font-semibold">
+                        No notifications yet.
+                      </div>
+                    ) : (
+                      notifications.map((n) => (
+                        <div
+                          key={n.id}
+                          className={`p-2.5 rounded-xl border transition-all ${
+                            n.read
+                              ? "bg-white border-slate-100"
+                              : "bg-blue-50/15 border-blue-100"
+                          }`}
+                        >
+                          <div className="flex justify-between items-start gap-2">
+                            <span
+                              className={`font-bold text-[11px] ${
+                                n.read ? "text-slate-800" : "text-blue-900"
+                              }`}
+                            >
+                              {n.title}
+                            </span>
+                            <span className="text-[9px] text-slate-400 font-mono font-medium">
+                              {n.time}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-normal font-medium">
+                            {n.desc}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  <div className="border-t border-slate-100 pt-2.5 mt-3 text-center">
+                    <button
+                      type="button"
+                      className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer w-full"
+                    >
+                      View all activity
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button className="p-2.5 rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:bg-slate-50 relative flex items-center justify-center">
+              <FiUser className="w-5 h-5 text-slate-700" />
+            </button>
+          </div>
+        </header>
+
+        {loading ? (
+          <div className="h-[60vh] flex flex-col justify-center items-center gap-3">
+            <FiLoader className="w-8 h-8 text-purple-600 animate-spin" />
+            <span className="text-sm text-slate-550 font-semibold font-mono">
+              Loading archive entries...
+            </span>
+          </div>
+        ) : (
+          <div className="space-y-6 animate-scale-up">
+            {/* Search & Filters */}
+            <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="relative w-full md:w-80">
+                <FiSearch className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <input
+                  type="text"
+                  placeholder="Search merchant or filename..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:border-blue-500 text-slate-800 shadow-sm placeholder-slate-400 font-semibold"
+                />
+              </div>
+
+              <div className="flex flex-col sm:flex-row w-full md:w-auto gap-3 items-center">
+                <div className="w-full sm:w-44">
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-blue-500 text-slate-800 shadow-sm font-semibold cursor-pointer"
+                  >
+                    <option value="">All Categories</option>
+                    {categories.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="w-full sm:w-44">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-blue-500 text-slate-800 shadow-sm font-semibold cursor-pointer"
+                  >
+                    <option value="date_desc">Latest Date</option>
+                    <option value="date_asc">Oldest Date</option>
+                    <option value="amount_desc">Highest Amount</option>
+                    <option value="amount_asc">Lowest Amount</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Table Grid */}
+            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 bg-slate-50/70 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th className="p-4 pl-6">File Name</th>
+                      <th className="p-4">Merchant</th>
+                      <th className="p-4">Date</th>
+                      <th className="p-4">Category</th>
+                      <th className="p-4 text-right">Tax (GST)</th>
+                      <th className="p-4 text-right">Total Amount</th>
+                      <th className="p-4 text-center pr-6">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
+                    {processedInvoices.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan="7"
+                          className="p-12 text-center text-slate-400 font-semibold"
+                        >
+                          No matching invoices found in your archive.
+                        </td>
+                      </tr>
+                    ) : (
+                      processedInvoices.map((inv) => {
+                        const cleanName = getCleanFileName(inv.fileUrl);
+                        return (
+                          <tr
+                            key={inv._id}
+                            className="hover:bg-slate-50/50 transition-colors"
+                          >
+                            <td className="p-4 pl-6 font-semibold text-slate-900 max-w-[200px] truncate">
+                              <div className="flex items-center gap-2">
+                                <FiFileText className="w-4 h-4 text-purple-500 shrink-0" />
+                                <span className="truncate" title={cleanName}>
+                                  {cleanName}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-4 font-outfit font-bold text-slate-800">
+                              {inv.merchantName || "General Vendor"}
+                            </td>
+                            <td className="p-4 text-slate-550 font-mono font-medium">
+                              {new Date(
+                                inv.invoiceDate || inv.createdAt
+                              ).toLocaleDateString()}
+                            </td>
+                            <td className="p-4">
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 border border-slate-150 text-slate-500">
+                                {inv.category || "Others"}
+                              </span>
+                            </td>
+                            <td className="p-4 text-right font-mono font-semibold text-slate-500">
+                              ₹{(inv.gstAmount || 0).toFixed(2)}
+                            </td>
+                            <td className="p-4 text-right font-bold text-blue-600 font-mono">
+                              ₹{(inv.totalAmount || 0).toFixed(2)}
+                            </td>
+                            <td className="p-4">
+                              <div className="flex gap-2 justify-center pr-2">
+                                <button
+                                  onClick={() => setSelectedInvoice(inv)}
+                                  className="p-2 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-blue-600 hover:bg-blue-50 hover:border-blue-100 shadow-sm transition-all cursor-pointer flex items-center justify-center"
+                                  title="Audit Details"
+                                >
+                                  <FiEye className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDelete(inv._id)}
+                                  className="p-2 rounded-xl border border-red-100 bg-red-50/30 text-red-500 hover:text-red-700 hover:bg-red-100/60 transition-all cursor-pointer flex items-center justify-center"
+                                  title="Delete Record"
+                                >
+                                  <FiTrash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* Details Slide-out/Modal */}
+      {selectedInvoice && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white max-w-2xl w-full p-8 border border-slate-200 rounded-3xl text-slate-800 space-y-6 max-h-[90vh] overflow-y-auto relative animate-scale-up shadow-2xl">
+            <button
+              onClick={() => setSelectedInvoice(null)}
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+
+            <div>
+              <h3 className="text-xl font-bold font-outfit text-slate-900 mb-1">
+                Receipt Structure Audit
+              </h3>
+              <p className="text-xs text-slate-400 font-mono font-medium">
+                Invoice ID: {selectedInvoice._id}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-b border-slate-100 py-4 text-xs font-semibold">
+              <div className="space-y-1">
+                <span className="text-slate-400 flex items-center gap-1">
+                  <FiTag className="w-3.5 h-3.5" /> Category
+                </span>
+                <span className="text-slate-800 font-bold text-sm block">
+                  {selectedInvoice.category}
+                </span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-slate-400 flex items-center gap-1">
+                  <FiCalendar className="w-3.5 h-3.5" /> Receipt Date
+                </span>
+                <span className="text-slate-800 font-bold text-sm block">
+                  {new Date(
+                    selectedInvoice.invoiceDate || selectedInvoice.createdAt
+                  ).toDateString()}
+                </span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-slate-400 flex items-center gap-1">
+                  💸 Total Charged
+                </span>
+                <span className="text-blue-600 font-extrabold text-sm font-mono block">
+                  ₹{(selectedInvoice.totalAmount || 0).toFixed(2)}
+                </span>
+              </div>
+            </div>
+
+            {/* Itemized Line Items */}
+            <div className="space-y-3">
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                Itemized Line Items
+              </h4>
+              <div className="bg-slate-50 border border-slate-150 rounded-2xl overflow-hidden text-xs shadow-sm">
+                <div className="grid grid-cols-12 p-3.5 bg-slate-100/80 border-b border-slate-200/60 font-bold text-slate-500">
+                  <div className="col-span-8">Description</div>
+                  <div className="col-span-2 text-center">Qty</div>
+                  <div className="col-span-2 text-right">Price</div>
+                </div>
+
+                <div className="divide-y divide-slate-200/55 max-h-48 overflow-y-auto">
+                  {!selectedInvoice.purchasedItems ||
+                  selectedInvoice.purchasedItems.length === 0 ? (
+                    <div className="p-4 text-center text-slate-400 font-semibold text-xs">
+                      No items parsed.
+                    </div>
+                  ) : (
+                    selectedInvoice.purchasedItems.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="grid grid-cols-12 p-3.5 text-slate-700 font-mono"
+                      >
+                        <div className="col-span-8 truncate font-semibold text-slate-800">
+                          {item.name}
+                        </div>
+                        <div className="col-span-2 text-center font-bold text-slate-650">
+                          {item.quantity || 1}
+                        </div>
+                        <div className="col-span-2 text-right text-slate-900 font-bold">
+                          ₹{(item.price || 0).toFixed(2)}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Raw OCR logs */}
+            <div className="space-y-3">
+              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                Raw OCR Text Logs
+              </h4>
+              <pre className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-[10px] text-slate-650 font-mono overflow-auto max-h-32 whitespace-pre-wrap leading-relaxed select-all shadow-inner">
+                {selectedInvoice.extractedText ||
+                  "No raw OCR logs associated with this parse."}
+              </pre>
+            </div>
+
+            {/* Document link */}
+            <div className="flex justify-between items-center text-xs">
+              <a
+                href={`${API_URL}${selectedInvoice.fileUrl}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-600 hover:text-blue-700 flex items-center gap-1 font-bold transition-colors"
+              >
+                <FiDownload className="w-4 h-4" /> View Original File
+              </a>
+
+              <button
+                onClick={() => setSelectedInvoice(null)}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-600 hover:text-slate-950 font-bold shadow-sm transition-all cursor-pointer"
+              >
+                Close Audit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default InvoiceHistory;

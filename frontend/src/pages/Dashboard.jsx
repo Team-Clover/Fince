@@ -43,6 +43,11 @@ const Dashboard = () => {
 
   // Interactive controls
   const [spendingPeriod, setSpendingPeriod] = useState('monthly'); // 'daily' | 'monthly' | 'yearly'
+  const [chartKey, setChartKey] = useState(0); // bump to restart draw animation
+
+  // Chart hover state
+  const [hoverInfo, setHoverInfo] = useState(null); // { x, y, label, amount }
+  const svgContainerRef = useRef(null);
   
   // Manual Log Modal State
   const [showManualModal, setShowManualModal] = useState(false);
@@ -601,7 +606,7 @@ const Dashboard = () => {
                 {['daily', 'monthly', 'yearly'].map(p => (
                   <button 
                     key={p}
-                    onClick={() => setSpendingPeriod(p)}
+                    onClick={() => { setSpendingPeriod(p); setChartKey(k => k + 1); setHoverInfo(null); }}
                     className={`px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-all cursor-pointer ${spendingPeriod === p ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500 hover:text-slate-800'}`}
                   >
                     {p}
@@ -610,12 +615,64 @@ const Dashboard = () => {
               </div>
             </div>
             
+            {/* Inject chart animation keyframes */}
+            <style>{`
+              @keyframes drawLine {
+                from { stroke-dashoffset: 1200; }
+                to   { stroke-dashoffset: 0; }
+              }
+              @keyframes fadeArea {
+                from { opacity: 0; }
+                to   { opacity: 1; }
+              }
+              @keyframes popDot {
+                from { r: 0; opacity: 0; }
+                to   { r: 4; opacity: 1; }
+              }
+            `}</style>
+
             <div className="h-56 w-full relative">
               <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-gray-400 pb-6">
-                <span>Max</span><span>75%</span><span>50%</span><span>25%</span><span>0</span>
+                {chartData && chartData.some(d => d.amount > 0) ? (
+                  (() => {
+                    const maxVal = Math.max(...chartData.map(d => d.amount));
+                    return ['Max', '75%', '50%', '25%', '0'].map((l, i) => (
+                      <span key={i}>
+                        {i === 0 ? `₹${maxVal.toLocaleString()}` : l}
+                      </span>
+                    ));
+                  })()
+                ) : (
+                  ['Max', '75%', '50%', '25%', '0'].map((l, i) => <span key={i}>{l}</span>)
+                )}
               </div>
-              <div className="ml-8 h-full border-b border-gray-100 relative">
-                <svg viewBox="0 0 400 100" className="w-full h-full" preserveAspectRatio="none" style={{ overflow: 'visible' }}>
+              <div
+                ref={svgContainerRef}
+                className="ml-8 h-full border-b border-gray-100 relative"
+                onMouseLeave={() => setHoverInfo(null)}
+              >
+                <svg
+                  key={chartKey}
+                  viewBox="0 0 400 100"
+                  className="w-full h-full"
+                  preserveAspectRatio="none"
+                  style={{ overflow: 'visible', cursor: chartData && chartData.some(d => d.amount > 0) ? 'crosshair' : 'default' }}
+                  onMouseMove={(e) => {
+                    if (!chartData || chartData.length < 2 || !chartData.some(d => d.amount > 0)) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const pct = mouseX / rect.width;
+                    const svgX = pct * 400;
+                    const idx = Math.min(
+                      Math.round(pct * (chartData.length - 1)),
+                      chartData.length - 1
+                    );
+                    const maxVal = Math.max(...chartData.map(d => d.amount), 1);
+                    const pointX = (idx / (chartData.length - 1)) * 400;
+                    const pointY = 100 - (chartData[idx].amount / maxVal) * (100 - 20) - 10;
+                    setHoverInfo({ svgX: pointX, svgY: pointY, label: chartData[idx].name, amount: chartData[idx].amount });
+                  }}
+                >
                   <defs>
                     <linearGradient id="purpleGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.45" />
@@ -634,27 +691,70 @@ const Dashboard = () => {
                       </feMerge>
                     </filter>
                   </defs>
+
                   {/* Subtle horizontal grid lines */}
                   {[25, 50, 75].map(pct => (
                     <line key={pct} x1="0" y1={100 - pct} x2="400" y2={100 - pct} stroke="#e2e8f0" strokeWidth="0.5" vectorEffect="non-scaling-stroke" strokeDasharray="4 4" />
                   ))}
-                  {/* Filled gradient area */}
-                  <path d={svgAreaPath} fill="url(#purpleGradient)" />
-                  {/* Glowing shadow path */}
-                  <path d={svgPath} fill="none" stroke="#7c3aed" strokeWidth="4" vectorEffect="non-scaling-stroke" strokeOpacity="0.15" filter="url(#glow)" />
-                  {/* Main stroke with gradient */}
-                  <path d={svgPath} fill="none" stroke="url(#strokeGradient)" strokeWidth="2.5" vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" />
-                  {/* Animated end-dot — only show when there's real data */}
-                  {(() => {
-                    if (!chartData || chartData.length === 0) return null;
-                    if (!chartData.some(d => d.amount > 0)) return null;
+
+                  {/* Hover vertical crosshair */}
+                  {hoverInfo && (
+                    <line
+                      x1={hoverInfo.svgX} y1="0" x2={hoverInfo.svgX} y2="100"
+                      stroke="#7c3aed" strokeWidth="0.8" vectorEffect="non-scaling-stroke"
+                      strokeDasharray="3 3" strokeOpacity="0.6"
+                    />
+                  )}
+
+                  {/* Filled gradient area — fade in */}
+                  <path
+                    d={svgAreaPath}
+                    fill="url(#purpleGradient)"
+                    style={{ animation: 'fadeArea 0.8s ease-out forwards' }}
+                  />
+
+                  {/* Glowing shadow path — draw animation */}
+                  <path
+                    d={svgPath} fill="none" stroke="#7c3aed" strokeWidth="4"
+                    vectorEffect="non-scaling-stroke" strokeOpacity="0.15" filter="url(#glow)"
+                    strokeDasharray="1200" strokeDashoffset="1200"
+                    style={{ animation: 'drawLine 1.4s cubic-bezier(0.4,0,0.2,1) forwards' }}
+                  />
+
+                  {/* Main stroke — draw animation (slightly delayed) */}
+                  <path
+                    d={svgPath} fill="none" stroke="url(#strokeGradient)" strokeWidth="2.5"
+                    vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round"
+                    strokeDasharray="1200" strokeDashoffset="1200"
+                    style={{ animation: 'drawLine 1.4s cubic-bezier(0.4,0,0.2,1) 0.05s forwards' }}
+                  />
+
+                  {/* Data point circles — show on hover */}
+                  {chartData && chartData.some(d => d.amount > 0) && hoverInfo && (() => {
+                    const maxVal = Math.max(...chartData.map(d => d.amount), 1);
+                    return chartData.map((d, i) => {
+                      const px = chartData.length > 1 ? (i / (chartData.length - 1)) * 400 : 200;
+                      const py = 100 - (d.amount / maxVal) * (100 - 20) - 10;
+                      const isActive = Math.abs(px - hoverInfo.svgX) < 1;
+                      return (
+                        <circle
+                          key={i} cx={px} cy={py}
+                          r={isActive ? 5 : 2.5}
+                          fill={isActive ? '#7c3aed' : '#a78bfa'}
+                          stroke="white" strokeWidth="1.5"
+                          vectorEffect="non-scaling-stroke"
+                          style={{ transition: 'r 0.15s ease, fill 0.15s ease' }}
+                        />
+                      );
+                    });
+                  })()}
+
+                  {/* Animated end-dot — only show when there's real data and no hover */}
+                  {!hoverInfo && chartData && chartData.some(d => d.amount > 0) && (() => {
                     const maxVal = Math.max(...chartData.map(d => d.amount), 1);
                     const lastIdx = chartData.length - 1;
-                    // Use the same formula as the path builder
-                    const ex = lastIdx > 0 ? (lastIdx / lastIdx) * 400 : 200;
-                    const ey = 100 - (chartData[lastIdx].amount / maxVal) * (100 - 20) - 10;
-                    // Correct x: last point in the sequence
                     const correctX = chartData.length > 1 ? 400 : 200;
+                    const ey = 100 - (chartData[lastIdx].amount / maxVal) * (100 - 20) - 10;
                     return (
                       <>
                         <circle cx={correctX} cy={ey} r="4" fill="#7c3aed" vectorEffect="non-scaling-stroke" />
@@ -666,6 +766,24 @@ const Dashboard = () => {
                     );
                   })()}
                 </svg>
+
+                {/* Hover tooltip */}
+                {hoverInfo && (
+                  <div
+                    className="absolute pointer-events-none z-10"
+                    style={{
+                      left: `calc(${(hoverInfo.svgX / 400) * 100}% + 8px)`,
+                      top: `calc(${(hoverInfo.svgY / 100) * 100}% - 36px)`,
+                      transform: hoverInfo.svgX > 300 ? 'translateX(-110%)' : 'translateX(0)'
+                    }}
+                  >
+                    <div className="bg-slate-900 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
+                      <div className="text-purple-300">{hoverInfo.label}</div>
+                      <div className="text-white">₹{hoverInfo.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    </div>
+                  </div>
+                )}
+
                 <div className="absolute bottom-[-20px] left-0 w-full flex justify-between text-[10px] text-gray-400">
                   {trendLabels.map((label, idx) => (
                     <span key={idx} className="truncate max-w-[60px]">{label}</span>

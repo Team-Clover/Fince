@@ -208,29 +208,28 @@ const Budgets = () => {
       <main className="flex-1 p-8 md:p-12 overflow-y-auto h-full relative">
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl -z-10 pointer-events-none translate-x-1/3 -translate-y-1/3"></div>
 
-        {/* Sticky top header matching reference layout */}
-        <header className="flex h-16 border-b border-slate-100 px-8 items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10 -mx-8 -mt-8 mb-8 md:-mx-12 md:-mt-12">
-          <div className="flex items-center gap-4">
-            <h2 className="font-outfit text-xl font-bold tracking-wide text-slate-900">
-              Budgets
-            </h2>
+        {/* Top Header / Notification & Personal Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Budgets</h1>
+            <p className="text-slate-500 text-sm mt-1">Manage and track your monthly budget limits</p>
           </div>
           
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-[10px] rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
-              <span>{user?.userMode === 'family' ? 'Family Space' : user?.userMode === 'business' ? 'Business Space' : 'Personal Space'}</span>
+              <span>Personal Space</span>
             </div>
-            <button className="p-2.5 rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:bg-slate-50 relative">
-              <FiBell className="w-5 h-5 text-slate-700" />
+            <button className="p-2.5 bg-white border border-gray-200 text-slate-700 rounded-xl shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center cursor-pointer">
+              <FiBell size={20} />
             </button>
           </div>
-        </header>
+        </div>
 
         {/* Date Filter selector */}
         <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <FaPiggyBank className="w-5 h-5 text-pink-500 animate-pulse" />
+            <FaPiggyBank className="w-5 h-5 text-purple-500 animate-pulse" />
             <span className="font-bold text-sm text-slate-800">Fiscal Period Allocations</span>
           </div>
           <div className="flex gap-3 w-full sm:w-auto">
@@ -302,7 +301,7 @@ const Budgets = () => {
               
               {loading ? (
                 <div className="py-12 flex justify-center">
-                  <FiLoader className="w-6 h-6 animate-spin text-pink-500" />
+                  <FiLoader className="w-6 h-6 animate-spin text-blue-500" />
                 </div>
               ) : budgets.length === 0 ? (
                 <div className="py-12 text-center text-xs text-slate-500 space-y-3">
@@ -374,15 +373,15 @@ const Budgets = () => {
             </div>
 
             {/* Gemini AI Savings Report */}
-            <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm border-l-4 border-l-pink-500 relative overflow-hidden">
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm border-l-4 border-l-purple-500 relative overflow-hidden">
               <div className="flex items-center gap-2.5 mb-4">
-                <FaWandMagicSparkles className="w-5 h-5 text-pink-500 animate-pulse" />
+                <FaWandMagicSparkles className="w-5 h-5 text-purple-500 animate-pulse" />
                 <h4 className="font-bold text-base text-slate-900 font-outfit">Gemini AI Savings Report</h4>
               </div>
 
               {aiLoading ? (
                 <div className="py-8 flex flex-col items-center gap-2 text-xs text-slate-500">
-                  <FiLoader className="w-6 h-6 animate-spin text-pink-500" />
+                  <FiLoader className="w-6 h-6 animate-spin text-purple-500" />
                   <span>Gemini analyzing transaction histories and spending metrics...</span>
                 </div>
               ) : aiAdvice ? (
@@ -440,10 +439,10 @@ const Budgets = () => {
                 <button
                   type="submit"
                   disabled={formLoading}
-                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-yellow-500 hover:opacity-90 text-slate-950 font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 mt-2 cursor-pointer"
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 mt-2 cursor-pointer"
                 >
                   {formLoading ? (
-                    <FiLoader className="w-4 h-4 animate-spin text-slate-950" />
+                    <FiLoader className="w-4 h-4 animate-spin text-white" />
                   ) : (
                     <>
                       <FiPlus className="w-4 h-4" /> Save Budget Limit
@@ -456,7 +455,7 @@ const Budgets = () => {
             {/* AI Auto-Allocator */}
             <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-4">
               <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-                <FaWandMagicSparkles className="w-5 h-5 text-pink-500 animate-pulse" />
+                <FaWandMagicSparkles className="w-5 h-5 text-purple-500 animate-pulse" />
                 <h3 className="font-bold text-base text-slate-900 font-outfit">AI Budget Allocator</h3>
               </div>
 
@@ -486,21 +485,21 @@ const Budgets = () => {
                 <button
                   type="submit"
                   disabled={aiAllocateLoading}
-                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-yellow-500 hover:opacity-90 text-slate-950 font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 mt-2 cursor-pointer"
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 mt-2 cursor-pointer"
                 >
                   {aiAllocateLoading ? (
-                    <FiLoader className="w-4 h-4 animate-spin text-slate-950" />
+                    <FiLoader className="w-4 h-4 animate-spin text-white" />
                   ) : (
                     <>
-                      <FaWandMagicSparkles className="w-4 h-4 text-slate-950" /> Auto-Allocate Category Budgets
+                      <FaWandMagicSparkles className="w-4 h-4 text-white" /> Auto-Allocate Category Budgets
                     </>
                   )}
                 </button>
               </form>
 
               {aiAllocateRationale && (
-                <div className="p-4 bg-pink-50/50 border border-pink-100 rounded-xl text-[11px] leading-relaxed text-slate-700 animate-fade-in space-y-1.5 font-medium shadow-sm">
-                  <div className="flex items-center gap-1.5 font-bold text-pink-600 uppercase tracking-wider text-[10px] mb-1">
+                <div className="p-4 bg-purple-50/50 border border-purple-100 rounded-xl text-[11px] leading-relaxed text-slate-700 animate-fade-in space-y-1.5 font-medium shadow-sm">
+                  <div className="flex items-center gap-1.5 font-bold text-purple-600 uppercase tracking-wider text-[10px] mb-1">
                     <FaWandMagicSparkles className="w-3.5 h-3.5 animate-pulse" /> AI Split Rationale
                   </div>
                   <p className="whitespace-pre-wrap">{aiAllocateRationale}</p>

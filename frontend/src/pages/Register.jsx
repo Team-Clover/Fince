@@ -18,10 +18,6 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
-  useEffect(() => {
-    document.title = "Register - Fince AI";
-  }, []);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({

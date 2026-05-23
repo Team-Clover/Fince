@@ -6,7 +6,7 @@ import { BiRupee } from 'react-icons/bi';
 import { FiTarget, FiSettings, FiLogOut } from 'react-icons/fi';
 import { LuUpload } from 'react-icons/lu';
 import { RiMoneyDollarBoxLine } from 'react-icons/ri';
-import { FaWandMagicSparkles } from 'react-icons/fa6';
+import logo from '../assets/images/logo2.jpeg';
 
 const Sidebar = () => {
   const menuItems = [
@@ -22,8 +22,8 @@ const Sidebar = () => {
   return (
     <aside className="w-20 md:w-24 h-screen bg-white border-r border-gray-100 flex flex-col items-center py-8 shadow-sm flex-shrink-0 relative z-10">
       {/* Brand Icon */}
-      <div className="mb-12 w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-blue-500/30">
-        <FaWandMagicSparkles size={20} />
+      <div className="mb-12 w-16 h-16 flex items-center justify-center">
+        <img src={logo} alt="Brand Logo" className="w-full h-full object-contain" />
       </div>
 
       {/* Nav Items */}
@@ -33,10 +33,9 @@ const Sidebar = () => {
             key={item.id}
             to={item.path}
             className={({ isActive }) =>
-              `relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 group ${
-                isActive
-                  ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-md shadow-blue-500/20'
-                  : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+              `relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 group ${isActive
+                ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-md shadow-blue-500/20'
+                : 'text-white hover:text-blue-600 hover:bg-blue-50'
               }`
             }
           >

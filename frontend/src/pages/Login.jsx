@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 import logo1 from "../assets/images/logo1.jpeg";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -34,33 +36,16 @@ const Login = () => {
 
     setLoading(true);
 
-    try {
-      const response = await fetch("http://localhost:4000/api/user/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+    const result = await login(formData.email, formData.password);
 
-      const data = await response.json();
-
-      if (data.success) {
-        setMessage({ type: "success", text: data.message || "Login successful!" });
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.userData));
-        
-        // Redirect after delay
-        setTimeout(() => {
-          navigate("/profile");
-        }, 1500);
-      } else {
-        setMessage({ type: "error", text: data.message || "Login failed" });
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      setMessage({ type: "error", text: "Server connection failed. Please try again." });
-    } finally {
+    if (result.success) {
+      setMessage({ type: "success", text: result.message || "Login successful!" });
+      // Redirect after delay
+      setTimeout(() => {
+        navigate("/profile");
+      }, 1500);
+    } else {
+      setMessage({ type: "error", text: result.message });
       setLoading(false);
     }
   };

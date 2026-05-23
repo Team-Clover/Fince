@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 import logo1 from "../assets/images/logo1.jpeg";
 
 const Register = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -44,38 +46,21 @@ const Register = () => {
 
     setLoading(true);
 
-    try {
-      const response = await fetch("http://localhost:4000/api/user/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          fullName: formData.fullName,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone,
-          userMode: formData.userMode,
-        }),
-      });
+    const result = await register({
+      fullName: formData.fullName,
+      email: formData.email,
+      password: formData.password,
+      phone: formData.phone,
+      userMode: formData.userMode,
+    });
 
-      const data = await response.json();
-
-      if (data.success) {
-        setMessage({ type: "success", text: data.message || "Registration successful!" });
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.userData));
-
-        setTimeout(() => {
-          navigate("/profile");
-        }, 1500);
-      } else {
-        setMessage({ type: "error", text: data.message || "Registration failed" });
-      }
-    } catch (error) {
-      console.error("Registration error:", error);
-      setMessage({ type: "error", text: "Server connection failed. Please try again." });
-    } finally {
+    if (result.success) {
+      setMessage({ type: "success", text: result.message || "Registration successful!" });
+      setTimeout(() => {
+        navigate("/profile");
+      }, 1500);
+    } else {
+      setMessage({ type: "error", text: result.message });
       setLoading(false);
     }
   };

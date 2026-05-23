@@ -143,3 +143,4 @@ dist-ssr/
 
 # Ignore reference project folder
 FINCE/
+FINCE_TEMP/

@@ -5,19 +5,21 @@ const invoiceSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+    },
+
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
 
     fileUrl: {
       type: String,
-      required: true,
       trim: true,
     },
 
     fileType: {
       type: String,
       enum: ["image", "pdf"],
-      required: true,
     },
 
     extractedText: {
@@ -78,6 +80,63 @@ const invoiceSchema = new mongoose.Schema(
     aiSummary: {
       type: String,
       default: "",
+    },
+
+    // Reference fields
+    fileName: {
+      type: String,
+    },
+    filePath: {
+      type: String,
+    },
+    fileSize: {
+      type: Number,
+    },
+    mimeType: {
+      type: String,
+    },
+    ocrText: {
+      type: String,
+      default: '',
+    },
+    extractedDetails: {
+      merchant: { type: String, default: 'Unknown' },
+      amount: { type: Number, default: 0 },
+      date: { type: Date, default: Date.now },
+      tax: { type: Number, default: 0 },
+      category: { type: String, default: 'Uncategorized' },
+      invoiceNumber: { type: String, default: '' },
+      dueDate: { type: Date, default: null },
+      gstNumber: { type: String, default: '' },
+      items: [
+        {
+          name: { type: String },
+          price: { type: Number },
+          quantity: { type: Number, default: 1 }
+        }
+      ]
+    },
+    isDuplicate: {
+      type: Boolean,
+      default: false,
+    },
+    duplicateOf: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Invoice',
+      default: null,
+    },
+    isAnomaly: {
+      type: Boolean,
+      default: false,
+    },
+    anomalyReason: {
+      type: String,
+      default: '',
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'processing', 'completed', 'failed'],
+      default: 'pending',
     },
   },
   {

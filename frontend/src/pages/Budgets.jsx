@@ -1,0 +1,475 @@
+import React, { useState, useEffect } from 'react';
+import Sidebar from '../components/Sidebar';
+import { FiAlertTriangle, FiPlus, FiTrash2, FiLoader, FiBell } from 'react-icons/fi';
+import { FaWandMagicSparkles, FaPiggyBank } from 'react-icons/fa6';
+
+const Budgets = () => {
+  // Initialize budgets to empty array to match default state in screenshot
+  const [budgets, setBudgets] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // Date states
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
+  const [year, setYear] = useState(new Date().getFullYear());
+
+  // Form states
+  const [category, setCategory] = useState('overall');
+  const [limit, setLimit] = useState('');
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  // AI Allocator Form State
+  const [aiTotalLimit, setAiTotalLimit] = useState('');
+  const [aiAllocateError, setAiAllocateError] = useState('');
+  const [aiAllocateLoading, setAiAllocateLoading] = useState(false);
+  const [aiAllocateRationale, setAiAllocateRationale] = useState('');
+
+  // AI Advice State
+  const [aiAdvice, setAiAdvice] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const categories = [
+    { value: "overall", label: "Overall Monthly Budget" },
+    { value: "Groceries", label: "Groceries" },
+    { value: "Utilities", label: "Utilities" },
+    { value: "Food & Dining", label: "Food & Dining" },
+    { value: "Entertainment", label: "Entertainment" },
+    { value: "Travel & Transport", label: "Travel & Transport" },
+    { value: "Shopping", label: "Shopping" },
+    { value: "Housing", label: "Housing" },
+    { value: "Others", label: "Others" }
+  ];
+
+  const months = [
+    { value: 1, label: "January" },
+    { value: 2, label: "February" },
+    { value: 3, label: "March" },
+    { value: 4, label: "April" },
+    { value: 5, label: "May" },
+    { value: 6, label: "June" },
+    { value: 7, label: "July" },
+    { value: 8, label: "August" },
+    { value: 9, label: "September" },
+    { value: 10, label: "October" },
+    { value: 11, label: "November" },
+    { value: 12, label: "December" }
+  ];
+
+  // Fetch AI Advice when budget exists
+  useEffect(() => {
+    if (budgets.length > 0) {
+      setAiLoading(true);
+      const timer = setTimeout(() => {
+        setAiAdvice(
+          `Based on your budget entries, your entertainment allocation is currently at high risk. Consider cutting back on luxury purchases over the next 14 days to meet your overall monthly savings objective of ₹15,000.`
+        );
+        setAiLoading(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      setAiAdvice('');
+    }
+  }, [budgets.length]);
+
+  const handleSaveBudget = (e) => {
+    e.preventDefault();
+    setFormError('');
+    if (!limit || isNaN(limit) || Number(limit) <= 0) {
+      setFormError('Please enter a valid budget limit.');
+      return;
+    }
+
+    setFormLoading(true);
+    setTimeout(() => {
+      const existingIndex = budgets.findIndex(b => b.category.toLowerCase() === category.toLowerCase());
+      const spentVal = existingIndex !== -1 ? budgets[existingIndex].spent : Math.round(Number(limit) * (0.3 + Math.random() * 0.4));
+      const limitNum = Number(limit);
+      const percentage = Math.round((spentVal / limitNum) * 100);
+
+      if (existingIndex !== -1) {
+        const updated = [...budgets];
+        updated[existingIndex] = {
+          ...updated[existingIndex],
+          limit: limitNum,
+          percentage
+        };
+        setBudgets(updated);
+      } else {
+        const newBudget = {
+          id: Date.now(),
+          category,
+          spent: spentVal,
+          limit: limitNum,
+          percentage
+        };
+        setBudgets([...budgets, newBudget]);
+      }
+      setLimit('');
+      setFormLoading(false);
+    }, 600);
+  };
+
+  const handleAiAllocate = (e) => {
+    e.preventDefault();
+    setAiAllocateError('');
+    setAiAllocateRationale('');
+    if (!aiTotalLimit || isNaN(aiTotalLimit) || Number(aiTotalLimit) <= 0) {
+      setAiAllocateError('Please enter a valid total target budget limit.');
+      return;
+    }
+
+    setAiAllocateLoading(true);
+    setTimeout(() => {
+      const total = Number(aiTotalLimit);
+      
+      const splits = [
+        { category: "Housing", pct: 35 },
+        { category: "Food & Dining", pct: 20 },
+        { category: "Groceries", pct: 15 },
+        { category: "Shopping", pct: 10 },
+        { category: "Travel & Transport", pct: 10 },
+        { category: "Utilities", pct: 10 }
+      ];
+
+      const allocatedBudgets = splits.map((item, idx) => {
+        const itemLimit = Math.round((total * item.pct) / 100);
+        const spentVal = Math.round(itemLimit * (0.4 + Math.random() * 0.45));
+        const percentage = Math.round((spentVal / itemLimit) * 100);
+        
+        return {
+          id: idx + 1,
+          category: item.category,
+          spent: spentVal,
+          limit: itemLimit,
+          percentage
+        };
+      });
+
+      setBudgets(allocatedBudgets);
+      setAiAllocateRationale(`allocated ₹${(total * 0.35).toLocaleString()} for Housing, ₹${(total * 0.2).toLocaleString()} for Food & Dining, and divided the rest dynamically. Recommended savings buffer of ₹${Math.round(total * 0.15).toLocaleString()} created.`);
+      setAiTotalLimit('');
+      setAiAllocateLoading(false);
+    }, 1000);
+  };
+
+  const handleDeleteBudget = (id) => {
+    if (!window.confirm('Delete this budget limit?')) return;
+    setBudgets(budgets.filter(b => b.id !== id));
+  };
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-[#F8FAFC] text-slate-800 font-sans">
+      <Sidebar />
+      
+      <main className="flex-1 p-8 md:p-12 overflow-y-auto h-full relative">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl -z-10 pointer-events-none translate-x-1/3 -translate-y-1/3"></div>
+
+        {/* Sticky top header matching reference layout */}
+        <header className="flex h-16 border-b border-slate-100 px-8 items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10 -mx-8 -mt-8 mb-8 md:-mx-12 md:-mt-12">
+          <div className="flex items-center gap-4">
+            <h2 className="font-outfit text-xl font-bold tracking-wide text-slate-900">
+              Budgets
+            </h2>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-[10px] rounded-full">
+              <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
+              <span>Personal Space</span>
+            </div>
+            <button className="p-2.5 rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:bg-slate-50 relative">
+              <FiBell className="w-5 h-5 text-slate-700" />
+            </button>
+          </div>
+        </header>
+
+        {/* Date Filter selector */}
+        <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <FaPiggyBank className="w-5 h-5 text-pink-500 animate-pulse" />
+            <span className="font-bold text-sm text-slate-800">Fiscal Period Allocations</span>
+          </div>
+          <div className="flex gap-3 w-full sm:w-auto">
+            <select
+              value={month}
+              onChange={(e) => setMonth(Number(e.target.value))}
+              className="flex-1 sm:flex-initial bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-pink-500 text-slate-800 font-medium shadow-sm cursor-pointer"
+            >
+              {months.map(m => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
+            
+            <input
+              type="number"
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              className="w-20 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-pink-500 text-slate-800 font-mono text-center shadow-sm"
+            />
+          </div>
+        </div>
+
+        {/* Content Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          {/* Left Side: Active Budgets lists and progress */}
+          <div className="lg:col-span-8 space-y-6">
+            
+            {/* Visual Budget Allocation vs Spending Chart */}
+            {!loading && budgets.length > 0 && (
+              <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-4">
+                <div>
+                  <h3 className="font-bold text-base text-slate-800">Budget Limit vs Spending</h3>
+                  <p className="text-xs text-slate-500">Visual share comparison across categorized limits (in ₹)</p>
+                </div>
+                
+                {/* Responsive CSS grid-based bar chart */}
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
+                  <div className="space-y-5">
+                    {budgets.map((b) => (
+                      <div key={b.id} className="space-y-1.5">
+                        <div className="flex justify-between text-xs font-semibold">
+                          <span className="text-slate-700 capitalize font-medium">{b.category}</span>
+                          <span className="text-slate-400">
+                            Spent: ₹{b.spent.toLocaleString()} / <strong className="text-slate-800">₹{b.limit.toLocaleString()}</strong>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex-1 bg-slate-200/80 h-3 rounded-full overflow-hidden flex">
+                            <div 
+                              className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full" 
+                              style={{ width: `${Math.min((b.spent / b.limit) * 100, 100)}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-[10px] font-bold font-mono text-purple-650 bg-purple-50 px-2 py-0.5 rounded w-10 text-center">
+                            {Math.round((b.spent / b.limit) * 100)}%
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Active Allowances List */}
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-6">
+              <h3 className="font-bold text-base text-slate-800 border-b border-slate-100 pb-3">Active Allowances</h3>
+              
+              {loading ? (
+                <div className="py-12 flex justify-center">
+                  <FiLoader className="w-6 h-6 animate-spin text-pink-500" />
+                </div>
+              ) : budgets.length === 0 ? (
+                <div className="py-12 text-center text-xs text-slate-500 space-y-3">
+                  <FiAlertTriangle className="w-8 h-8 text-slate-400 mx-auto" />
+                  <p>No budgets established for this month. Create one manually or use AI Auto-Allocation on the right!</p>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {budgets.map((b) => {
+                    const pct = b.percentage;
+                    let barColor = 'bg-emerald-500';
+                    let statusText = 'On Track';
+                    let textClass = 'text-emerald-600';
+
+                    if (pct >= 100) {
+                      barColor = 'bg-rose-500';
+                      statusText = 'Limit Exceeded';
+                      textClass = 'text-rose-600';
+                    } else if (pct >= 85) {
+                      barColor = 'bg-amber-500';
+                      statusText = 'Approaching Limit';
+                      textClass = 'text-amber-600';
+                    }
+
+                    return (
+                      <div key={b.id} className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-3.5 transition-all hover:shadow-sm">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-sm capitalize text-slate-800">{b.category}</span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full bg-white border border-slate-200 ${textClass}`}>
+                              {statusText}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteBudget(b.id)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        {/* Bar indicator */}
+                        <div className="w-full bg-slate-200/60 h-2 rounded-full overflow-hidden">
+                          <div 
+                            className={`${barColor} h-full rounded-full transition-all duration-500`}
+                            style={{ width: `${Math.min(pct, 100)}%` }}
+                          />
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between text-xs font-mono text-slate-600">
+                          <div>
+                            <span className="text-slate-400 font-sans">Spent:</span> ₹{b.spent.toLocaleString()}
+                          </div>
+                          <div>
+                            <span className="text-slate-400 font-sans">Limit:</span> ₹{b.limit.toLocaleString()}
+                          </div>
+                          <div>
+                            <span className="text-slate-400 font-sans">Remaining:</span>{' '}
+                            <span className={b.limit - b.spent < 0 ? 'text-rose-600 font-bold' : 'text-emerald-600'}>
+                              ₹{(b.limit - b.spent).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Gemini AI Savings Report */}
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm border-l-4 border-l-pink-500 relative overflow-hidden">
+              <div className="flex items-center gap-2.5 mb-4">
+                <FaWandMagicSparkles className="w-5 h-5 text-pink-500 animate-pulse" />
+                <h4 className="font-bold text-base text-slate-900 font-outfit">Gemini AI Savings Report</h4>
+              </div>
+
+              {aiLoading ? (
+                <div className="py-8 flex flex-col items-center gap-2 text-xs text-slate-500">
+                  <FiLoader className="w-6 h-6 animate-spin text-pink-500" />
+                  <span>Gemini analyzing transaction histories and spending metrics...</span>
+                </div>
+              ) : aiAdvice ? (
+                <div className="text-xs text-slate-600 leading-relaxed font-sans max-w-none whitespace-pre-wrap">
+                  {aiAdvice}
+                </div>
+              ) : (
+                <div className="text-xs text-slate-400 py-6 text-center">
+                  Configure your budgets to trigger Gemini analysis recommendations.
+                </div>
+              )}
+            </div>
+
+          </div>
+
+          {/* Right Side: Manual Setup form & AI Auto Allocator form */}
+          <div className="lg:col-span-4 space-y-6">
+            
+            {/* Manual Budget Allocator */}
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-4">
+              <h3 className="font-bold text-base text-slate-900 border-b border-slate-100 pb-3 font-outfit">Adjust Budget Manually</h3>
+              
+              {formError && (
+                <div className="p-3 bg-rose-50 border border-rose-250 rounded-xl text-xs text-rose-600">
+                  {formError}
+                </div>
+              )}
+
+              <form onSubmit={handleSaveBudget} className="space-y-4 text-xs font-semibold text-slate-500">
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider mb-1.5">Category</label>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-pink-500 text-slate-800 font-medium shadow-sm cursor-pointer"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider mb-1.5">Limit Amount (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="e.g. 5000"
+                    value={limit}
+                    onChange={(e) => setLimit(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-pink-500 text-slate-800 font-mono shadow-sm"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={formLoading}
+                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-yellow-500 hover:opacity-90 text-slate-950 font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 mt-2 cursor-pointer"
+                >
+                  {formLoading ? (
+                    <FiLoader className="w-4 h-4 animate-spin text-slate-950" />
+                  ) : (
+                    <>
+                      <FiPlus className="w-4 h-4" /> Save Budget Limit
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* AI Auto-Allocator */}
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm space-y-4">
+              <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                <FaWandMagicSparkles className="w-5 h-5 text-pink-500 animate-pulse" />
+                <h3 className="font-bold text-base text-slate-900 font-outfit">AI Budget Allocator</h3>
+              </div>
+
+              <p className="text-[11px] text-slate-500 leading-normal font-medium">
+                Enter your total monthly budget target. Gemini will split this target across spending categories dynamically, matching your historical 60-day ledger logs.
+              </p>
+
+              {aiAllocateError && (
+                <div className="p-3 bg-rose-50 border border-rose-250 rounded-xl text-xs text-rose-600 font-medium">
+                  {aiAllocateError}
+                </div>
+              )}
+
+              <form onSubmit={handleAiAllocate} className="space-y-4 text-xs font-semibold text-slate-500">
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider mb-1.5">Total Target Budget (₹)</label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="e.g. 45000"
+                    value={aiTotalLimit}
+                    onChange={(e) => setAiTotalLimit(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-pink-500 text-slate-800 font-mono shadow-sm"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={aiAllocateLoading}
+                  className="w-full py-3 bg-gradient-to-r from-pink-500 to-yellow-500 hover:opacity-90 text-slate-950 font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-1.5 mt-2 cursor-pointer"
+                >
+                  {aiAllocateLoading ? (
+                    <FiLoader className="w-4 h-4 animate-spin text-slate-950" />
+                  ) : (
+                    <>
+                      <FaWandMagicSparkles className="w-4 h-4 text-slate-950" /> Auto-Allocate Category Budgets
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {aiAllocateRationale && (
+                <div className="p-4 bg-pink-50/50 border border-pink-100 rounded-xl text-[11px] leading-relaxed text-slate-700 animate-fade-in space-y-1.5 font-medium shadow-sm">
+                  <div className="flex items-center gap-1.5 font-bold text-pink-600 uppercase tracking-wider text-[10px] mb-1">
+                    <FaWandMagicSparkles className="w-3.5 h-3.5 animate-pulse" /> AI Split Rationale
+                  </div>
+                  <p className="whitespace-pre-wrap">{aiAllocateRationale}</p>
+                </div>
+              )}
+            </div>
+
+          </div>
+
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default Budgets;

@@ -36,7 +36,7 @@ const Sidebar = () => {
             to={item.path}
             className={({ isActive }) =>
               `relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300 group ${isActive
-                ? 'bg-gradient-to-br from-blue-500 to-purple-650 text-white shadow-md shadow-blue-500/20'
+                ? 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-md shadow-blue-500/20'
                 : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
               }`
             }

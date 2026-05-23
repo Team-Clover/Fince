@@ -373,7 +373,17 @@ const InvoiceHistory = () => {
                               </div>
                             </td>
                             <td className="p-4 font-outfit font-bold text-slate-800">
-                              {inv.merchantName || "General Vendor"}
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span>{inv.merchantName || "General Vendor"}</span>
+                                {inv.gstVerification?.isFakeInvoice && (
+                                  <span 
+                                    className="px-1.5 py-0.5 rounded text-[8px] bg-red-150 text-red-700 border border-red-200 font-extrabold cursor-help shrink-0"
+                                    title={`Suspected Fake: ${inv.gstVerification.message}`}
+                                  >
+                                    FAKE
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="p-4 text-slate-550 font-mono font-medium">
                               {new Date(
@@ -439,6 +449,73 @@ const InvoiceHistory = () => {
               <p className="text-xs text-slate-400 font-mono font-medium">
                 Invoice ID: {selectedInvoice._id}
               </p>
+            </div>
+
+            {/* GST Verification & Fraud Audit */}
+            <div className="bg-[#F8FAFC] border border-slate-200 rounded-2xl p-5 space-y-4 text-left">
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                  🛡️ GST Developer Portal Audit
+                </h4>
+                <div className="flex gap-2 items-center">
+                  {selectedInvoice.gstVerification?.isFakeInvoice && (
+                    <span className="px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-red-100 border border-red-200 text-red-650 animate-pulse">
+                      SUSPECTED FAKE
+                    </span>
+                  )}
+                  <span className={`px-2 py-0.5 rounded-md text-[9px] font-extrabold border ${
+                    selectedInvoice.gstVerification?.status === 'VERIFIED'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
+                      : selectedInvoice.gstVerification?.status === 'INVALID'
+                      ? 'bg-red-50 border-red-200 text-red-600'
+                      : 'bg-slate-100 border-slate-250 text-slate-500'
+                  }`}>
+                    {selectedInvoice.gstVerification?.status || 'UNVERIFIED'}
+                  </span>
+                </div>
+              </div>
+
+              {selectedInvoice.gstVerification?.status && selectedInvoice.gstVerification.status !== 'UNVERIFIED' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold text-slate-700">
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Trade Name (Registry)</span>
+                    <span className="text-slate-800 font-bold block">{selectedInvoice.gstVerification.businessName || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Taxpayer Type</span>
+                    <span className="text-slate-800 font-bold block">{selectedInvoice.gstVerification.taxpayerType || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Registration State</span>
+                    <span className="text-slate-800 font-bold block">{selectedInvoice.gstVerification.stateCode || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Fraud Risk Assessment</span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 bg-slate-200 rounded-full h-2 overflow-hidden w-28">
+                        <div 
+                          className={`h-full rounded-full ${
+                            (selectedInvoice.fraudScore || 0) > 60 
+                              ? 'bg-red-500' 
+                              : (selectedInvoice.fraudScore || 0) > 30 
+                              ? 'bg-amber-500' 
+                              : 'bg-emerald-500'
+                          }`}
+                          style={{ width: `${selectedInvoice.fraudScore || 0}%` }}
+                        />
+                      </div>
+                      <span className="font-mono font-bold text-slate-800">{selectedInvoice.fraudScore || 0}%</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedInvoice.gstVerification?.message && (
+                <div className="p-3 bg-white border border-slate-150 rounded-xl text-[11px] text-slate-500 leading-relaxed font-medium">
+                  <strong className="text-slate-700 block mb-0.5">Audit Intelligence Logs:</strong>
+                  {selectedInvoice.gstVerification.message}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-b border-slate-100 py-4 text-xs font-semibold">

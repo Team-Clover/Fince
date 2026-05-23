@@ -15,6 +15,7 @@ import {
 } from '../../aiml/services/gemini.js';
 import { detectDuplicateInvoice } from '../../aiml/services/duplicateDetector.js';
 import { detectAnomaly } from '../../aiml/services/anomalyDetector.js';
+import { auditInvoiceFraud } from '../../aiml/services/gstPortalService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -203,10 +204,17 @@ export const uploadInvoice = async (req, res) => {
     invoice.isDuplicate = duplicateResult.isDuplicate;
     invoice.duplicateOf = duplicateResult.duplicateOf;
     
+    // Run GST and Fraud Audit Check
+    const fraudAudit = await auditInvoiceFraud(userId, extractedDetails, ocrText);
+    invoice.gstVerification = fraudAudit.gstVerification;
+    invoice.fraudScore = fraudAudit.fraudScore;
+    
     // Run Anomaly Detection
     const anomalyResult = await detectAnomaly(userId, extractedDetails);
-    invoice.isAnomaly = anomalyResult.isAnomaly;
-    invoice.anomalyReason = anomalyResult.reason;
+    invoice.isAnomaly = anomalyResult.isAnomaly || fraudAudit.isFakeInvoice;
+    invoice.anomalyReason = anomalyResult.isAnomaly 
+      ? anomalyResult.reason 
+      : (fraudAudit.isFakeInvoice ? `GST FRAUD: ${fraudAudit.gstVerification.message}` : '');
     
     invoice.status = 'pending';
     await invoice.save();

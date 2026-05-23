@@ -9,8 +9,8 @@ import { analyzeEmotionalSpending } from '../behavior/emotionalAnalyzer.js';
 export function calculateFinancialHealthScore(transactions, budgets = []) {
   if (!Array.isArray(transactions) || transactions.length === 0) {
     return {
-      score: 70,
-      ratings: { savingsRate: 'Medium', consistency: 'High', luxuryexposure: 'Low' },
+      score: 0,
+      ratings: { savingsRate: 'N/A', consistency: 'N/A', luxuryexposure: 'N/A' },
       suggestions: ["Establish your transaction base to enable precision grading."]
     };
   }

@@ -7,6 +7,7 @@ import Transaction from '../models/transactionModel.js';
 import Budget from '../models/budgetModel.js';
 import Alert from '../models/alertModel.js';
 import User from '../models/userModel.js';
+import cloudinary from '../config/cloudinary.js';
 
 import { 
   analyzeInvoiceText, 
@@ -130,13 +131,25 @@ export const uploadInvoice = async (req, res) => {
 
   const fileType = mimeType.includes('pdf') ? 'pdf' : 'image';
 
+  // Upload file to Cloudinary
+  let fileUrl = `/${filePath.replace(/\\/g, '/')}`;
+  try {
+    const uploadResult = await cloudinary.uploader.upload(filePath, {
+      folder: 'invoices',
+      resource_type: 'auto'
+    });
+    fileUrl = uploadResult.secure_url;
+  } catch (cloudinaryErr) {
+    console.error("Cloudinary upload failed, using local path fallback:", cloudinaryErr);
+  }
+
   // Create initial pending Invoice
   const invoice = new Invoice({
     userId,
     user: userId,
     fileName,
-    filePath: `/${filePath.replace(/\\/g, '/')}`,
-    fileUrl: `/${filePath.replace(/\\/g, '/')}`,
+    filePath: fileUrl,
+    fileUrl: fileUrl,
     fileSize,
     mimeType,
     fileType,
@@ -228,6 +241,15 @@ export const uploadInvoice = async (req, res) => {
     invoice.status = 'failed';
     await invoice.save();
     res.status(500).json({ success: false, message: 'Error analyzing file', error: error.message });
+  } finally {
+    // Delete local temporary file from server uploads folder
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (unlinkErr) {
+      console.warn("Could not delete local temp upload file:", unlinkErr);
+    }
   }
 };
 
@@ -471,4 +493,8 @@ export const manualInvoice = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 };
+
+// Triggering nodemon restart for node-fetch installation fix
+
+
 

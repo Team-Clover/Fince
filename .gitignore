@@ -141,6 +141,3 @@ dist-ssr/
 
 !backend/.env
 
-# Ignore reference project folder
-FINCE/
-FINCE_TEMP/

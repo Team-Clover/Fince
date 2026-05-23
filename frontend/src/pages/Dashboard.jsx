@@ -378,14 +378,14 @@ const Dashboard = () => {
   // Summary calculation variables
   const summary = analyticsData?.summary || { totalExpenses: 0, monthlyExpenses: 0, transactionCount: 0 };
   const overallBudgetObj = budgets.find(b => b.category === 'overall') || { limit: 0, spent: 0 };
-  const overallLimit = overallBudgetObj.limit || 100000;
+  const overallLimit = overallBudgetObj.limit || 0;
   const overallSpent = summary.monthlyExpenses;
   const overallRemaining = Math.max(overallLimit - overallSpent, 0);
   const overallPct = overallLimit > 0 ? ((overallRemaining / overallLimit) * 100).toFixed(0) : 0;
   const avgTrans = summary.transactionCount > 0 ? (summary.totalExpenses / summary.transactionCount).toFixed(0) : 0;
-  const estimatedTax = intelligence?.tax?.totalTaxPaid ?? (summary.totalExpenses * 0.08);
+  const estimatedTax = intelligence?.tax?.totalTaxPaid ?? 0;
 
-  const wellnessScore = intelligence?.health?.score || 85;
+  const wellnessScore = intelligence?.health?.score || 0;
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (wellnessScore / 100) * circumference;
@@ -396,7 +396,7 @@ const Dashboard = () => {
   let svgAreaPath = '';
   let trendLabels = [];
 
-  if (chartData && chartData.length > 0) {
+  if (chartData && chartData.some(d => d.amount > 0)) {
     const width = 400;
     const height = 100;
     const maxVal = Math.max(...chartData.map(d => d.amount), 1);
@@ -441,12 +441,6 @@ const Dashboard = () => {
     }));
   } else if (Array.isArray(intelligence?.forecasting)) {
     forecastProjections = intelligence.forecasting;
-  } else {
-    forecastProjections = [
-      { category: 'Groceries', projectedNextMonth: summary.monthlyExpenses * 0.15, risk: 'LOW', confidence: 92 },
-      { category: 'Utilities', projectedNextMonth: summary.monthlyExpenses * 0.08, risk: 'LOW', confidence: 95 },
-      { category: 'Entertainment', projectedNextMonth: summary.monthlyExpenses * 0.05, risk: 'LOW', confidence: 88 }
-    ];
   }
 
   let wealthRecommendations = [];
@@ -454,11 +448,6 @@ const Dashboard = () => {
     wealthRecommendations = intelligence.wealth.recommendationsList || [];
   } else if (Array.isArray(intelligence?.wealth)) {
     wealthRecommendations = intelligence.wealth;
-  } else {
-    wealthRecommendations = [
-      { title: 'Optimize Subscriptions', category: 'Fixed Costs', action: 'Consider auditing duplicate SaaS or utility charges to immediately increase safety net savings.', priority: 'MEDIUM', impact: 'High Impact' },
-      { title: 'Tax Strategy Allocation', category: 'Taxation', action: 'Ensure proper corporate or individual invoicing documentation is preserved for dynamic tax claims.', priority: 'LOW', impact: 'Medium Impact' }
-    ];
   }
 
   const reportNarrative = intelligence?.narrative || `### Financial Narrative\nLog transactions or upload invoices to kickstart your personalized AI narration feed! Currently, you have logged ${summary.transactionCount} transactions.`;
@@ -878,8 +867,8 @@ const Dashboard = () => {
               <div className="space-y-5">
                 <div>
                   <div className="flex justify-between text-xs font-semibold mb-2">
-                    <span className="text-slate-600">Savings Consistency</span>
-                    <span className="text-green-600 font-bold">{intelligence?.health?.metrics?.savingsConsistency || 'Optimal'}</span>
+                    <span className="text-slate-600">Savings Rate</span>
+                    <span className="text-green-600 font-bold">{intelligence?.health?.ratings?.savingsRate || 'N/A'}</span>
                   </div>
                   <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
                     <div className="h-full bg-green-500 rounded-full" style={{ width: `${wellnessScore}%` }}></div>
@@ -887,20 +876,20 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <div className="flex justify-between text-xs font-semibold mb-2">
-                    <span className="text-slate-600">Budget Adherence</span>
-                    <span className="text-blue-600 font-bold">{intelligence?.health?.metrics?.budgetAdherence || '95%'}</span>
+                    <span className="text-slate-600">Spending Consistency</span>
+                    <span className="text-blue-600 font-bold">{intelligence?.health?.ratings?.consistency || 'N/A'}</span>
                   </div>
                   <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${Math.min(wellnessScore + 5, 100)}%` }}></div>
+                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${intelligence?.health?.ratings?.consistency === 'High' ? 95 : 60}%` }}></div>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-xs font-semibold mb-2">
-                    <span className="text-slate-600">Debt & Utility Control</span>
-                    <span className="text-purple-600 font-bold">Excellent</span>
+                    <span className="text-slate-600">Luxury & Subscription Exposure</span>
+                    <span className="text-purple-600 font-bold">{intelligence?.health?.ratings?.luxuryexposure || 'N/A'}</span>
                   </div>
                   <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-purple-500 rounded-full" style={{ width: `92%` }}></div>
+                    <div className="h-full bg-purple-500 rounded-full" style={{ width: `${intelligence?.health?.ratings?.luxuryexposure === 'High' ? 40 : 85}%` }}></div>
                   </div>
                 </div>
               </div>

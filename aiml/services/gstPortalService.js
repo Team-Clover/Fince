@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+
 
 const STATE_CODES = {
   "01": "Jammu & Kashmir", "02": "Himachal Pradesh", "03": "Punjab", "04": "Chandigarh",

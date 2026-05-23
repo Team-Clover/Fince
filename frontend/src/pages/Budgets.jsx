@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { FiAlertTriangle, FiPlus, FiTrash2, FiLoader, FiBell } from 'react-icons/fi';
 import { FaWandMagicSparkles, FaPiggyBank } from 'react-icons/fa6';
+import { useAuth } from '../context/AuthContext';
+
+const API_URL = "http://localhost:4000";
 
 const Budgets = () => {
-  // Initialize budgets to empty array to match default state in screenshot
+  const { user } = useAuth();
   const [budgets, setBudgets] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -55,23 +58,55 @@ const Budgets = () => {
     { value: 12, label: "December" }
   ];
 
-  // Fetch AI Advice when budget exists
+  const fetchBudgets = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/budgets?month=${month}&year=${year}`, {
+        headers: {
+          token: localStorage.getItem('token') || ''
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBudgets(data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching budgets:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBudgets();
+  }, [month, year]);
+
+  // Generate dynamic AI spending advice based on active budget states
   useEffect(() => {
     if (budgets.length > 0) {
       setAiLoading(true);
       const timer = setTimeout(() => {
-        setAiAdvice(
-          `Based on your budget entries, your entertainment allocation is currently at high risk. Consider cutting back on luxury purchases over the next 14 days to meet your overall monthly savings objective of ₹15,000.`
-        );
+        const overBudgets = budgets.filter(b => b.percentage >= 100 && b.category !== 'overall');
+        const warningBudgets = budgets.filter(b => b.percentage >= 85 && b.percentage < 100 && b.category !== 'overall');
+        
+        let adviceText = '';
+        if (overBudgets.length > 0) {
+          adviceText = `AI Smart Advisory: Budget Exceeded! You have breached your set limit for ${overBudgets.map(b => b.category).join(', ')}. Discretionary outlay in these channels must be paused immediately to restore fiscal stability.`;
+        } else if (warningBudgets.length > 0) {
+          adviceText = `AI Smart Advisory: Warning! Your spending for ${warningBudgets.map(b => b.category).join(', ')} is approaching set limits (${warningBudgets.map(b => `${Math.round(b.percentage)}%`).join(', ')}). We recommend reducing non-essential expenses for the next 7 days.`;
+        } else {
+          adviceText = `AI Smart Advisory: Your overall expenses are well managed and within limits. Maintain your current spending rate to achieve a budget surplus of at least ₹10,000 for this period.`;
+        }
+        setAiAdvice(adviceText);
         setAiLoading(false);
-      }, 1000);
+      }, 500);
       return () => clearTimeout(timer);
     } else {
       setAiAdvice('');
     }
-  }, [budgets.length]);
+  }, [budgets]);
 
-  const handleSaveBudget = (e) => {
+  const handleSaveBudget = async (e) => {
     e.preventDefault();
     setFormError('');
     if (!limit || isNaN(limit) || Number(limit) <= 0) {
@@ -80,36 +115,36 @@ const Budgets = () => {
     }
 
     setFormLoading(true);
-    setTimeout(() => {
-      const existingIndex = budgets.findIndex(b => b.category.toLowerCase() === category.toLowerCase());
-      const spentVal = existingIndex !== -1 ? budgets[existingIndex].spent : Math.round(Number(limit) * (0.3 + Math.random() * 0.4));
-      const limitNum = Number(limit);
-      const percentage = Math.round((spentVal / limitNum) * 100);
-
-      if (existingIndex !== -1) {
-        const updated = [...budgets];
-        updated[existingIndex] = {
-          ...updated[existingIndex],
-          limit: limitNum,
-          percentage
-        };
-        setBudgets(updated);
-      } else {
-        const newBudget = {
-          id: Date.now(),
+    try {
+      const res = await fetch(`${API_URL}/api/budgets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          token: localStorage.getItem('token') || ''
+        },
+        body: JSON.stringify({
           category,
-          spent: spentVal,
-          limit: limitNum,
-          percentage
-        };
-        setBudgets([...budgets, newBudget]);
+          limit: Number(limit),
+          month,
+          year
+        })
+      });
+      if (res.ok) {
+        setLimit('');
+        fetchBudgets();
+      } else {
+        const data = await res.json();
+        setFormError(data.message || 'Error saving budget limit.');
       }
-      setLimit('');
+    } catch (err) {
+      console.error('Error saving budget:', err);
+      setFormError('Connection error.');
+    } finally {
       setFormLoading(false);
-    }, 600);
+    }
   };
 
-  const handleAiAllocate = (e) => {
+  const handleAiAllocate = async (e) => {
     e.preventDefault();
     setAiAllocateError('');
     setAiAllocateRationale('');
@@ -119,42 +154,51 @@ const Budgets = () => {
     }
 
     setAiAllocateLoading(true);
-    setTimeout(() => {
-      const total = Number(aiTotalLimit);
-      
-      const splits = [
-        { category: "Housing", pct: 35 },
-        { category: "Food & Dining", pct: 20 },
-        { category: "Groceries", pct: 15 },
-        { category: "Shopping", pct: 10 },
-        { category: "Travel & Transport", pct: 10 },
-        { category: "Utilities", pct: 10 }
-      ];
-
-      const allocatedBudgets = splits.map((item, idx) => {
-        const itemLimit = Math.round((total * item.pct) / 100);
-        const spentVal = Math.round(itemLimit * (0.4 + Math.random() * 0.45));
-        const percentage = Math.round((spentVal / itemLimit) * 100);
-        
-        return {
-          id: idx + 1,
-          category: item.category,
-          spent: spentVal,
-          limit: itemLimit,
-          percentage
-        };
+    try {
+      const res = await fetch(`${API_URL}/api/budgets/ai-allocate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          token: localStorage.getItem('token') || ''
+        },
+        body: JSON.stringify({
+          totalLimit: Number(aiTotalLimit),
+          month,
+          year
+        })
       });
-
-      setBudgets(allocatedBudgets);
-      setAiAllocateRationale(`allocated ₹${(total * 0.35).toLocaleString()} for Housing, ₹${(total * 0.2).toLocaleString()} for Food & Dining, and divided the rest dynamically. Recommended savings buffer of ₹${Math.round(total * 0.15).toLocaleString()} created.`);
-      setAiTotalLimit('');
+      if (res.ok) {
+        const data = await res.json();
+        setAiAllocateRationale(data.rationale || 'AI budget allocation complete.');
+        setAiTotalLimit('');
+        fetchBudgets();
+      } else {
+        const data = await res.json();
+        setAiAllocateError(data.message || 'Error allocating budgets.');
+      }
+    } catch (err) {
+      console.error('Error in AI budget allocation:', err);
+      setAiAllocateError('Connection error.');
+    } finally {
       setAiAllocateLoading(false);
-    }, 1000);
+    }
   };
 
-  const handleDeleteBudget = (id) => {
+  const handleDeleteBudget = async (id) => {
     if (!window.confirm('Delete this budget limit?')) return;
-    setBudgets(budgets.filter(b => b.id !== id));
+    try {
+      const res = await fetch(`${API_URL}/api/budgets/${id}`, {
+        method: 'DELETE',
+        headers: {
+          token: localStorage.getItem('token') || ''
+        }
+      });
+      if (res.ok) {
+        fetchBudgets();
+      }
+    } catch (err) {
+      console.error('Error deleting budget:', err);
+    }
   };
 
   return (
@@ -175,7 +219,7 @@ const Budgets = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-[10px] rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
-              <span>Personal Space</span>
+              <span>{user?.userMode === 'family' ? 'Family Space' : user?.userMode === 'business' ? 'Business Space' : 'Personal Space'}</span>
             </div>
             <button className="p-2.5 rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:bg-slate-50 relative">
               <FiBell className="w-5 h-5 text-slate-700" />
@@ -227,7 +271,7 @@ const Budgets = () => {
                 <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
                   <div className="space-y-5">
                     {budgets.map((b) => (
-                      <div key={b.id} className="space-y-1.5">
+                      <div key={b._id || b.id} className="space-y-1.5">
                         <div className="flex justify-between text-xs font-semibold">
                           <span className="text-slate-700 capitalize font-medium">{b.category}</span>
                           <span className="text-slate-400">
@@ -284,7 +328,7 @@ const Budgets = () => {
                     }
 
                     return (
-                      <div key={b.id} className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-3.5 transition-all hover:shadow-sm">
+                      <div key={b._id || b.id} className="p-4 bg-slate-50 border border-slate-100 rounded-xl space-y-3.5 transition-all hover:shadow-sm">
                         <div className="flex justify-between items-center">
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className="font-bold text-sm capitalize text-slate-800">{b.category}</span>
@@ -293,7 +337,7 @@ const Budgets = () => {
                             </span>
                           </div>
                           <button
-                            onClick={() => handleDeleteBudget(b.id)}
+                            onClick={() => handleDeleteBudget(b._id || b.id)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
                           >
                             <FiTrash2 className="w-4 h-4" />

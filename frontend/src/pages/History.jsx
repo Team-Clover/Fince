@@ -33,29 +33,7 @@ const History = () => {
 
   // Notifications State
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "Invoice parsed successfully",
-      desc: "Gemini completed extracting details for Invoice #1024.",
-      time: "2m ago",
-      read: false,
-    },
-    {
-      id: 2,
-      title: "Budget alert",
-      desc: "You have reached 85% of your 'Groceries' budget.",
-      time: "1h ago",
-      read: false,
-    },
-    {
-      id: 3,
-      title: "New transaction",
-      desc: "₹12,500.00 added to ledger from Google Pay.",
-      time: "1d ago",
-      read: true,
-    },
-  ]);
+  const [notifications, setNotifications] = useState([]);
   const notificationRef = useRef(null);
 
   useEffect(() => {
@@ -98,8 +76,22 @@ const History = () => {
           setInvoices(data);
         }
       }
+
+      const alertsRes = await fetch(`${API_URL}/api/alerts`, {
+        headers: { token: token }
+      });
+      if (alertsRes.ok) {
+        const alertsJson = await alertsRes.json();
+        setNotifications(alertsJson.map((alert, idx) => ({
+          id: alert._id || idx,
+          title: alert.type === 'budget_exceeded' ? 'Budget Exceeded' : 'Budget Alert',
+          desc: alert.message,
+          time: new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          read: alert.read || false
+        })));
+      }
     } catch (err) {
-      console.error('Error fetching invoices:', err);
+      console.error('Error fetching data:', err);
     } finally {
       setLoading(false);
     }
@@ -203,11 +195,21 @@ const History = () => {
                     </span>
                     <button
                       type="button"
-                      onClick={() =>
-                        setNotifications(
-                          notifications.map((n) => ({ ...n, read: true }))
-                        )
-                      }
+                      onClick={async () => {
+                        try {
+                          const res = await fetch(`${API_URL}/api/alerts/read-all`, {
+                            method: 'PUT',
+                            headers: {
+                              token: token || localStorage.getItem('token') || ''
+                            }
+                          });
+                          if (res.ok) {
+                            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+                          }
+                        } catch (err) {
+                          console.error('Error reading alerts:', err);
+                        }
+                      }}
                       className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer"
                     >
                       Mark all read

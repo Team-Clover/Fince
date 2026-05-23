@@ -9,8 +9,14 @@ const API_URL = "http://localhost:4000";
 
 const Chat = () => {
   const { token, user } = useAuth();
-  const [chats, setChats] = useState([]);
-  const [activeChatId, setActiveChatId] = useState(null);
+  const [chats, setChats] = useState(() => {
+    const saved = localStorage.getItem('fince_chats');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [activeChatId, setActiveChatId] = useState(() => {
+    const savedId = localStorage.getItem('fince_active_chat');
+    return savedId ? (savedId === 'db-chat' ? 'db-chat' : Number(savedId) || savedId) : null;
+  });
   const [inputText, setInputText] = useState("");
   const [editingChatId, setEditingChatId] = useState(null);
   const [editTitleText, setEditTitleText] = useState("");
@@ -44,20 +50,29 @@ const Chat = () => {
                 : new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
             }))
           };
-          setChats([dbChat, ...INITIAL_CHATS.filter(c => c.id !== 1)]);
-          setActiveChatId('db-chat');
+          setChats(prev => {
+            const existingChats = prev.length > 0 ? prev.filter(c => c.id !== 'db-chat') : INITIAL_CHATS.filter(c => c.id !== 1);
+            return [dbChat, ...existingChats];
+          });
+          if (!activeChatId) setActiveChatId('db-chat');
         } else {
-          setChats(INITIAL_CHATS);
-          setActiveChatId(INITIAL_CHATS[0]?.id || 1);
+          if (chats.length === 0) {
+            setChats(INITIAL_CHATS);
+            if (!activeChatId) setActiveChatId(INITIAL_CHATS[0]?.id || 1);
+          }
         }
       } else {
-        setChats(INITIAL_CHATS);
-        setActiveChatId(INITIAL_CHATS[0]?.id || 1);
+        if (chats.length === 0) {
+          setChats(INITIAL_CHATS);
+          if (!activeChatId) setActiveChatId(INITIAL_CHATS[0]?.id || 1);
+        }
       }
     } catch (error) {
       console.error('Error fetching chat history:', error);
-      setChats(INITIAL_CHATS);
-      setActiveChatId(INITIAL_CHATS[0]?.id || 1);
+      if (chats.length === 0) {
+        setChats(INITIAL_CHATS);
+        if (!activeChatId) setActiveChatId(INITIAL_CHATS[0]?.id || 1);
+      }
     } finally {
       setChatLoading(false);
     }
@@ -66,6 +81,18 @@ const Chat = () => {
   useEffect(() => {
     fetchChatHistory();
   }, []);
+
+  useEffect(() => {
+    if (chats.length > 0) {
+      localStorage.setItem('fince_chats', JSON.stringify(chats));
+    }
+  }, [chats]);
+
+  useEffect(() => {
+    if (activeChatId) {
+      localStorage.setItem('fince_active_chat', activeChatId.toString());
+    }
+  }, [activeChatId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

@@ -21,6 +21,7 @@ import { LuScan } from "react-icons/lu";
 const API_URL = "http://localhost:4000";
 
 const InvoiceHistory = () => {
+  const { user } = useAuth();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,29 +35,7 @@ const InvoiceHistory = () => {
 
   // Notifications State
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "Invoice parsed successfully",
-      desc: "Gemini completed extracting details for Invoice #1024.",
-      time: "2m ago",
-      read: false,
-    },
-    {
-      id: 2,
-      title: "Budget alert",
-      desc: "You have reached 85% of your 'Groceries' budget.",
-      time: "1h ago",
-      read: false,
-    },
-    {
-      id: 3,
-      title: "New transaction",
-      desc: "₹12,500.00 added to ledger from Google Pay.",
-      time: "1d ago",
-      read: true,
-    },
-  ]);
+  const [notifications, setNotifications] = useState([]);
   const notificationRef = useRef(null);
 
   useEffect(() => {
@@ -105,8 +84,47 @@ const InvoiceHistory = () => {
     }
   };
 
+  const fetchAlerts = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/alerts`, {
+        headers: {
+          token: localStorage.getItem("token") || "",
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications((data || []).map((alert, idx) => ({
+          id: alert._id || idx,
+          title: alert.type === 'budget_exceeded' ? 'Budget Exceeded' : 'Budget Alert',
+          desc: alert.message,
+          time: new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          read: alert.read || alert.isRead || false
+        })));
+      }
+    } catch (err) {
+      console.error("Error fetching alerts:", err);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/alerts/read-all`, {
+        method: "PUT",
+        headers: {
+          token: localStorage.getItem("token") || "",
+        },
+      });
+      if (res.ok) {
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      }
+    } catch (err) {
+      console.error("Error marking alerts read:", err);
+    }
+  };
+
   useEffect(() => {
     fetchInvoices();
+    fetchAlerts();
   }, []);
 
   const handleDelete = async (id) => {
@@ -190,7 +208,7 @@ const InvoiceHistory = () => {
           <div className="flex items-center gap-4 relative" ref={notificationRef}>
             <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-[10px] rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
-              <span>+ Personal Space</span>
+              <span>{user?.userMode === 'family' ? 'Family Space' : user?.userMode === 'business' ? 'Business Space' : 'Personal Space'}</span>
             </div>
 
             {/* Notification Bell Icon */}
@@ -215,11 +233,7 @@ const InvoiceHistory = () => {
                     </span>
                     <button
                       type="button"
-                      onClick={() =>
-                        setNotifications(
-                          notifications.map((n) => ({ ...n, read: true }))
-                        )
-                      }
+                      onClick={handleMarkAllRead}
                       className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer"
                     >
                       Mark all read

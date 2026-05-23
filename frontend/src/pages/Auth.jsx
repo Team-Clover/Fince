@@ -170,13 +170,13 @@ const Auth = ({ mode = "login" }) => {
         
         {/* Branding & Logo */}
         <div className="flex flex-col items-center mb-6 animate-fade-in-up animation-delay-100">
-          <div className="w-14 h-14 rounded-2xl overflow-hidden border border-slate-200 hover:border-purple-500 shadow-md transition duration-300 transform hover:scale-110 active:scale-95 mb-3 flex items-center justify-center bg-slate-50">
+          <Link to="/" className="w-24 h-24 rounded-2xl overflow-hidden hover:scale-110 transition duration-300 transform active:scale-95 mb-3 flex items-center justify-center bg-slate-50 cursor-pointer">
             {logo2 ? (
               <img src={logo2} alt="Fince Logo" className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-gradient-to-tr from-blue-600 to-purple-500 flex items-center justify-center font-bold text-white text-xs">F</div>
+              <div className="w-full h-full bg-gradient-to-tr from-blue-600 to-purple-500 flex items-center justify-center font-bold text-white text-base">F</div>
             )}
-          </div>
+          </Link>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight transition-all duration-500">
             {isLogin ? "Welcome Back" : "Create an Account"}
           </h1>

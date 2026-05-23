@@ -10,7 +10,7 @@ const Footer = () => {
             <img
               src={logo2}
               alt="Logo"
-              className="h-12 w-12 rounded-xl object-cover border border-slate-100 shadow-sm"
+              className="h-22 w-22 rounded-2xl object-cover"
             />
           </div>
           <p className="mt-3 max-w-md text-xs leading-relaxed text-slate-450 font-medium">

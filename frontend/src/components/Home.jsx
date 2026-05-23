@@ -98,7 +98,7 @@ const Home = ({ activeLayout = 1 }) => {
                 Spent <span className="text-red-500 font-bold">12% less</span> on entertainment this week.
               </p>
             </div>
-            <button className="w-full inline-flex items-center justify-center gap-0.5 rounded-lg bg-gradient-to-r from-blue-600 to-violet-650 py-1 text-[8px] font-bold text-white shadow-sm">
+            <button className="w-full inline-flex items-center justify-center gap-0.5 rounded-lg bg-blue-600 hover:bg-blue-700 py-1 text-[8px] font-bold text-white shadow-sm">
               <span>View Insights</span>
             </button>
           </div>
@@ -126,7 +126,7 @@ const Home = ({ activeLayout = 1 }) => {
             <span className="text-[7px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold">Active</span>
           </div>
 
-          <div className="bg-gradient-to-tr from-blue-600 to-violet-650 rounded-xl p-3 shadow-lg flex flex-col gap-1">
+          <div className="bg-blue-600 rounded-xl p-3 shadow-lg flex flex-col gap-1">
             <span className="text-[7px] text-blue-100 font-medium uppercase tracking-wider">Available Balance</span>
             <span className="text-sm font-black tracking-tight">₹4,82,490</span>
             <div className="text-[6.5px] text-blue-200 mt-0.5 pt-0.5 border-t border-white/10 flex justify-between">
@@ -140,7 +140,7 @@ const Home = ({ activeLayout = 1 }) => {
             <div className="h-8 flex items-end gap-1 pt-1">
               {[50, 35, 70, 45, 85, 30, 60].map((val, i) => (
                 <div key={i} className="flex-1">
-                  <div className="w-full bg-gradient-to-t from-blue-500 to-violet-500 rounded-t-sm" style={{ height: `${val / 3.2}px` }} />
+                  <div className="w-full bg-gradient-to-t from-blue-500 to-purple-500 rounded-t-sm" style={{ height: `${val / 3.2}px` }} />
                 </div>
               ))}
             </div>
@@ -252,7 +252,7 @@ const Home = ({ activeLayout = 1 }) => {
                 Spent <span className="text-emerald-450 font-bold">12% less</span> on entertainment this week.
               </p>
             </div>
-            <button className="w-full inline-flex items-center justify-center gap-0.5 rounded-lg bg-gradient-to-r from-blue-600 to-violet-650 py-1 text-[8px] font-bold text-white shadow-sm">
+            <button className="w-full inline-flex items-center justify-center gap-0.5 rounded-lg bg-blue-600 hover:bg-blue-700 py-1 text-[8px] font-bold text-white shadow-sm">
               <span>View Insights</span>
             </button>
           </div>
@@ -274,7 +274,7 @@ const Home = ({ activeLayout = 1 }) => {
       <div className="space-y-6">
         <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl md:text-6xl leading-[1.1]">
           AI-Powered <br />
-          <span className="bg-gradient-to-r from-blue-600 to-violet-650 bg-clip-text text-transparent font-black pb-1 inline-block">
+          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-black pb-1 inline-block">
             Financial
           </span> <br />
           Intelligence <br />
@@ -289,7 +289,7 @@ const Home = ({ activeLayout = 1 }) => {
       <div className="flex flex-col gap-4 sm:flex-row">
         <a
           href="/login"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-violet-650 px-6 py-3.5 text-sm font-semibold text-white shadow-md hover:from-blue-700 hover:to-violet-750 transition duration-200"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3.5 text-sm font-semibold !text-white shadow-md hover:from-blue-700 hover:to-purple-700 transition duration-200"
         >
           <FiUpload className="h-4 w-4" />
           <span>Upload Statement</span>
@@ -353,7 +353,7 @@ const Home = ({ activeLayout = 1 }) => {
               </p>
             </div>
             <div className="flex flex-col gap-4 sm:flex-row">
-              <a href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-violet-650 px-6 py-3.5 text-sm font-semibold text-white shadow-md transition">
+              <a href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-violet-650 px-6 py-3.5 text-sm font-semibold !text-white shadow-md transition">
                 <FiUpload className="h-4 w-4" />
                 <span>Upload Statement</span>
               </a>
@@ -447,7 +447,7 @@ const Home = ({ activeLayout = 1 }) => {
     case 9: // Gradient Radial Glow Backdrop
       return (
         <div className="relative grid gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center py-16">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-violet-500/10 rounded-full blur-[160px] pointer-events-none scale-75" />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-[160px] pointer-events-none scale-75" />
           {renderHeroTextPill("Interactive Radial Glow")}
           <div className="relative group flex items-center justify-center z-10 w-full pr-8 md:pr-14 pb-10">
             <div className="w-full z-10 shadow-blue-500/5">{renderDashboardMockup()}</div>
@@ -474,7 +474,7 @@ const Home = ({ activeLayout = 1 }) => {
         <div className="relative grid gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center py-12">
           {renderHeroTextPill("AI-Powered Financial Intelligence")}
           <div className="relative group flex items-center justify-center z-10 w-full pr-8 md:pr-14 pb-10">
-            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-violet-500/5 rounded-3xl blur-3xl pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 to-purple-500/5 rounded-3xl blur-3xl pointer-events-none" />
             <div className="w-full z-10">{renderDashboardMockup()}</div>
             <div className="absolute -right-4 -bottom-6 md:-right-8 md:-bottom-8 z-20 transform scale-[0.75] md:scale-[0.8] origin-bottom-right drop-shadow-[0_25px_30px_rgba(0,0,0,0.18)] hover:scale-[0.85] transition-transform duration-300">
               {renderSmartphoneMockup()}

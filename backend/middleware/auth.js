@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 export const protectRoute = async (req, res, next) => {
   try {
     const token = req.headers.token;
-    const secret = process.env.JWT_SECRET || "fince_secret_key_123";
+    const secret = process.env.JWT_SECRET;
 
     const decoded = jwt.verify(token, secret);
 

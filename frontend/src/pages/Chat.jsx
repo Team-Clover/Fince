@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar.jsx';
-import { FiSend, FiPaperclip, FiMoreVertical, FiPlus, FiMessageSquare, FiEdit2, FiCheck } from 'react-icons/fi';
+import { FiSend, FiPaperclip, FiMoreVertical, FiPlus, FiMessageSquare, FiEdit2, FiCheck, FiBell, FiChevronDown } from 'react-icons/fi';
 import { FaWandMagicSparkles, FaUser } from 'react-icons/fa6';
 import { INITIAL_CHATS } from '../Constants/Constants.js';
 
@@ -146,16 +146,23 @@ const Chat = () => {
                 <FaWandMagicSparkles size={20} />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-slate-900">{activeChat.title}</h1>
-                <p className="text-sm text-slate-500 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                  FINCE AI
+                <h3 className="text-xl font-bold text-slate-800 tracking-tight">Ask FINCE AI anything</h3>
+                <p className="text-sm text-slate-500 max-w-sm mt-2">
+                  "Analyze my latest grocery spends" or "Am I on track with my monthly budget limit?" - ask about subscriptions, transactions, or financial insights.
                 </p>
               </div>
             </div>
-            <button className="p-2 text-gray-400 hover:text-slate-700 hover:bg-gray-100 rounded-lg transition-colors">
-              <FiMoreVertical size={24} />
-            </button>
+            
+            {/* Top Header / Notification & Personal Section */}
+            <div className="flex items-center gap-3 hidden md:flex">
+              <div className="flex items-center gap-2 px-4 py-2 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-sm rounded-full">
+                <div className="w-2 h-2 rounded-full bg-pink-500"></div>
+                Personal Space
+              </div>
+              <button className="p-2.5 bg-white border border-gray-200 text-slate-700 rounded-xl shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center">
+                <FiBell size={20} />
+              </button>
+            </div>
           </header>
 
           {/* Chat Messages Area */}

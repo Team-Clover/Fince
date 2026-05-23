@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import fs from 'fs';
 import { protectRoute } from '../middleware/auth.js';
-import { uploadInvoice, confirmInvoice, getInvoices, deleteInvoice } from '../controllers/invoiceController.js';
+import { uploadInvoice, confirmInvoice, getInvoices, deleteInvoice, manualInvoice } from '../controllers/invoiceController.js';
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -28,5 +28,6 @@ invoiceRouter.post('/upload', protectRoute, upload.single('invoice'), uploadInvo
 invoiceRouter.post('/confirm/:id', protectRoute, confirmInvoice);
 invoiceRouter.get('/', protectRoute, getInvoices);
 invoiceRouter.delete('/:id', protectRoute, deleteInvoice);
+invoiceRouter.post('/manual', protectRoute, manualInvoice);
 
 export default invoiceRouter;

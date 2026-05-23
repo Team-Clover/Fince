@@ -30,7 +30,10 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           console.error("Auth initialization failed:", error);
+          logout();
         }
+      } else {
+        logout();
       }
       setLoading(false);
     };

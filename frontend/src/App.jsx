@@ -12,19 +12,47 @@ import Settings from "./pages/Settings.jsx";
 import UploadInvoice from "./pages/UploadInvoice.jsx";
 import InvoiceHistory from "./pages/InvoiceHistory.jsx";
 
+import { useAuth } from "./context/AuthContext.jsx";
+
+const ProtectedRoute = ({ children }) => {
+  const { token, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="h-screen w-screen flex flex-col justify-center items-center gap-3 bg-[#F8FAFC]">
+        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <span className="text-sm text-slate-500 font-mono font-semibold animate-pulse">
+          Verifying authorization...
+        </span>
+      </div>
+    );
+  }
+
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
 const App = () => {
   return (
     <Routes>
+      {/* Public routes */}
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/chat" element={<Chat />} />
-      <Route path="/transactions" element={<IncomeSetup />} />
-      <Route path="/budgets" element={<Budgets />} />
-      <Route path="/settings" element={<Settings />} />
-      <Route path="/upload" element={<UploadInvoice />} />
-      <Route path="/history" element={<InvoiceHistory />} />
+
+      {/* Protected routes */}
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+      <Route path="/transactions" element={<ProtectedRoute><IncomeSetup /></ProtectedRoute>} />
+      <Route path="/budgets" element={<ProtectedRoute><Budgets /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+      <Route path="/upload" element={<ProtectedRoute><UploadInvoice /></ProtectedRoute>} />
+      <Route path="/history" element={<ProtectedRoute><InvoiceHistory /></ProtectedRoute>} />
+      
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

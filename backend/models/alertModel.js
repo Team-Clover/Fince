@@ -8,9 +8,13 @@ const alertSchema = new mongoose.Schema(
       required: true,
     },
 
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
     type: {
       type: String,
-      enum: ["budget", "transaction", "invoice", "system", "security", "other"],
       default: "system",
     },
 
@@ -24,6 +28,16 @@ const alertSchema = new mongoose.Schema(
       type: String,
       enum: ["info", "low", "medium", "high", "critical"],
       default: "info",
+    },
+
+    category: {
+      type: String,
+      default: null,
+    },
+
+    read: {
+      type: Boolean,
+      default: false,
     },
   },
   {

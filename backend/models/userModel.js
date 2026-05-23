@@ -28,6 +28,16 @@ const userSchema = new mongoose.Schema({
         default: 'individual',
         required: true,
     },
+    familyCode: {
+        type: String,
+        default: null,
+        index: true,
+    },
+    role: {
+        type: String,
+        enum: ['personal', 'business'],
+        default: 'personal',
+    },
 }, {
     timestamps: true,
 });

@@ -42,7 +42,7 @@ const Login = () => {
       setMessage({ type: "success", text: result.message || "Login successful!" });
       // Redirect after delay
       setTimeout(() => {
-        navigate("/profile");
+        navigate("/dashboard");
       }, 1500);
     } else {
       setMessage({ type: "error", text: result.message });

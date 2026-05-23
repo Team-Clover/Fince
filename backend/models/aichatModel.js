@@ -5,18 +5,26 @@ const aiChatSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+    },
+
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
 
     role: {
       type: String,
-      enum: ["user", "assistant", "system"],
+      enum: ["user", "model", "assistant", "system"],
       required: true,
     },
 
     message: {
       type: String,
-      required: true,
+      trim: true,
+    },
+
+    content: {
+      type: String,
       trim: true,
     },
   },

@@ -5,10 +5,19 @@ const transactionSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+    },
+
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
 
     invoiceId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Invoice",
+    },
+
+    invoice: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Invoice",
     },
@@ -44,7 +53,52 @@ const transactionSchema = new mongoose.Schema(
 
     transactionDate: {
       type: Date,
-      required: true,
+    },
+
+    date: {
+      type: Date,
+      default: Date.now,
+    },
+
+    type: {
+      type: String,
+      enum: ['expense', 'income'],
+      default: 'expense',
+    },
+
+    invoiceNumber: {
+      type: String,
+      default: '',
+    },
+
+    dueDate: {
+      type: Date,
+      default: null,
+    },
+
+    gstNumber: {
+      type: String,
+      default: '',
+    },
+
+    gstAmount: {
+      type: Number,
+      default: 0,
+    },
+
+    isDuplicate: {
+      type: Boolean,
+      default: false,
+    },
+
+    isAnomaly: {
+      type: Boolean,
+      default: false,
+    },
+
+    anomalyReason: {
+      type: String,
+      default: '',
     },
   },
   {

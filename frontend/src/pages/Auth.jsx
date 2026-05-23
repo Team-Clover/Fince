@@ -96,7 +96,7 @@ const Auth = ({ mode = "login" }) => {
     if (result.success) {
       setMessage({ type: "success", text: result.message || "Login successful!" });
       setTimeout(() => {
-        navigate("/profile");
+        navigate("/dashboard");
       }, 1500);
     } else {
       setMessage({ type: "error", text: result.message });

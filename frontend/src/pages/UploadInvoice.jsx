@@ -296,24 +296,22 @@ const UploadInvoice = () => {
         {/* Background ambient light */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl -z-10 pointer-events-none translate-x-1/3 -translate-y-1/3"></div>
 
-        {/* Sticky top header matching reference layout */}
-        <header className="flex h-16 border-b border-slate-100 px-8 items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-10 -mx-8 -mt-8 mb-8 md:-mx-12 md:-mt-12">
-          <div className="flex items-center gap-4">
-            <h2 className="font-outfit text-xl font-bold tracking-wide text-slate-900">
-              Upload Invoice
-            </h2>
+        {/* Top Header / Notification & Personal Section */}
+        <div className="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Upload Invoice</h1>
+            <p className="text-slate-500 text-sm mt-1">AI-powered receipt extraction and ledger entry</p>
           </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 px-3.5 py-1.5 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-[10px] rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
-              <span>+ Personal Space</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 px-4 py-2 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-sm rounded-full">
+              <div className="w-2 h-2 rounded-full bg-pink-500"></div>
+              Personal Space
             </div>
-            <button className="p-2.5 rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-300 hover:bg-slate-50 relative flex items-center justify-center">
-              <FiUser className="w-5 h-5 text-slate-700" />
+            <button className="p-2.5 bg-white border border-gray-200 text-slate-700 rounded-xl shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center cursor-pointer">
+              <FiUser size={20} />
             </button>
           </div>
-        </header>
+        </div>
 
         {stage === "upload" && (
           <div className="max-w-xl mx-auto mt-16 space-y-6 animate-scale-up">

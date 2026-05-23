@@ -1,24 +1,25 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import logo1 from "../assets/images/logo1.jpeg";
+import logo2 from "../assets/images/logo2.jpeg";
 
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
-    phone: "",
     userMode: "individual",
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
   useEffect(() => {
-    document.title = "Register - Fince Financial App";
+    document.title = "Register - Fince AI";
   }, []);
 
   const handleInputChange = (e) => {
@@ -33,9 +34,16 @@ const Register = () => {
     e.preventDefault();
     setMessage({ type: "", text: "" });
 
-    // Validate fields
-    if (!formData.fullName || !formData.email || !formData.password || !formData.confirmPassword || !formData.phone) {
-      setMessage({ type: "error", text: "Please fill in all required fields!" });
+    // Validate inputs
+    if (
+      !formData.fullName ||
+      !formData.email ||
+      !formData.phone ||
+      !formData.password ||
+      !formData.confirmPassword ||
+      !formData.userMode
+    ) {
+      setMessage({ type: "error", text: "Please fill in all fields!" });
       return;
     }
 
@@ -49,16 +57,20 @@ const Register = () => {
     const result = await register({
       fullName: formData.fullName,
       email: formData.email,
-      password: formData.password,
       phone: formData.phone,
+      password: formData.password,
       userMode: formData.userMode,
     });
 
     if (result.success) {
-      setMessage({ type: "success", text: result.message || "Registration successful!" });
+      setMessage({
+        type: "success",
+        text: result.message || "Registration successful! Redirecting...",
+      });
+      // Redirect after delay
       setTimeout(() => {
-        navigate("/profile");
-      }, 1500);
+        navigate("/login");
+      }, 2000);
     } else {
       setMessage({ type: "error", text: result.message });
       setLoading(false);
@@ -66,30 +78,37 @@ const Register = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center bg-[#000E24] overflow-y-auto py-12 px-4">
-      {/* Background Decorative Glow Elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] rounded-full bg-[#002966]/20 blur-[120px] pointer-events-none animate-pulse"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] rounded-full bg-[#0066FF]/10 blur-[120px] pointer-events-none animate-pulse duration-[6000ms]"></div>
+    <div className="relative min-h-screen w-full flex items-center justify-center bg-slate-50 overflow-y-auto py-12 px-4 selection:bg-purple-100 selection:text-purple-900">
+      {/* Grid Overlay background */}
+      <div className="absolute inset-0 grid-overlay opacity-40 pointer-events-none" />
 
-      {/* Main glassmorphic card */}
-      <div className="bg-[#001433]/60 backdrop-blur-xl border border-[#002966]/50 rounded-2xl p-8 w-full max-w-lg shadow-2xl relative z-10 hover:border-[#0066FF]/30 transition duration-500 my-auto">
+      {/* Decorative Glow Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[35rem] h-[35rem] bg-blue-500/10 blur-[120px] pointer-events-none animate-morph"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[35rem] h-[35rem] bg-purple-500/10 blur-[120px] pointer-events-none animate-morph animation-delay-300"></div>
+
+      {/* Main card */}
+      <div className="bg-white/80 border border-slate-200/60 rounded-3xl p-8 w-full max-w-lg shadow-2xl relative z-10 hover:border-purple-500/25 transition duration-500 my-auto backdrop-blur-xl animate-scale-up">
         
         {/* Branding & Logo */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-[#0066FF]/30 hover:border-[#0066FF] shadow-lg shadow-[#0066FF]/20 transition duration-300 transform hover:scale-105 mb-3">
-            <img src={logo1} alt="Fince Logo" className="w-full h-full object-cover" />
+        <div className="flex flex-col items-center mb-6 animate-fade-in-up animation-delay-100">
+          <div className="w-14 h-14 rounded-2xl overflow-hidden border border-slate-200 hover:border-purple-500 shadow-md transition duration-300 transform hover:scale-110 active:scale-95 mb-3 flex items-center justify-center bg-slate-50">
+            {logo2 ? (
+              <img src={logo2} alt="Fince Logo" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-tr from-blue-600 to-purple-500 flex items-center justify-center font-bold text-white text-xs">F</div>
+            )}
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Create an Account</h1>
-          <p className="text-sm text-[#99C2FF] mt-1">Get started with your Fince financial workspace</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Create an Account</h1>
+          <p className="text-xs text-slate-500 mt-1 font-medium">Get started with your Fince financial workspace</p>
         </div>
 
         {/* Alerts */}
         {message.text && (
           <div
-            className={`mb-6 p-4 rounded-lg text-sm border font-medium transition duration-300 ${
+            className={`mb-6 p-4 rounded-xl text-xs border font-semibold transition duration-300 animate-scale-up ${
               message.type === "success"
-                ? "bg-emerald-950/40 text-emerald-400 border-emerald-800/50"
-                : "bg-rose-950/40 text-rose-400 border-rose-800/50"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : "bg-rose-50 text-rose-700 border-rose-200"
             }`}
           >
             {message.text}
@@ -98,9 +117,9 @@ const Register = () => {
 
         {/* Registration Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 animate-fade-in-up animation-delay-200">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#99C2FF] mb-1.5" htmlFor="fullName">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2" htmlFor="fullName">
                 Full Name
               </label>
               <input
@@ -109,32 +128,14 @@ const Register = () => {
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleInputChange}
-                className="bg-[#000E24]/60 border border-[#002966] text-white rounded-lg py-2.5 px-4 w-full focus:outline-none focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] transition duration-300 placeholder-[#002966]"
+                className="bg-slate-50 border border-slate-200 text-slate-900 rounded-xl py-2.5 px-4 w-full focus:outline-none focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all duration-300 placeholder-slate-400 text-sm font-medium focus:scale-[1.02] focus:shadow-lg focus:shadow-purple-500/5"
                 placeholder="John Doe"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#99C2FF] mb-1.5" htmlFor="email">
-                Email Address
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="bg-[#000E24]/60 border border-[#002966] text-white rounded-lg py-2.5 px-4 w-full focus:outline-none focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] transition duration-300 placeholder-[#002966]"
-                placeholder="john@example.com"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#99C2FF] mb-1.5" htmlFor="phone">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2" htmlFor="phone">
                 Phone Number
               </label>
               <input
@@ -143,33 +144,32 @@ const Register = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
-                className="bg-[#000E24]/60 border border-[#002966] text-white rounded-lg py-2.5 px-4 w-full focus:outline-none focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] transition duration-300 placeholder-[#002966]"
-                placeholder="+1 (555) 000-0000"
+                className="bg-slate-50 border border-slate-200 text-slate-900 rounded-xl py-2.5 px-4 w-full focus:outline-none focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all duration-300 placeholder-slate-400 text-sm font-medium focus:scale-[1.02] focus:shadow-lg focus:shadow-purple-500/5"
+                placeholder="+91 99999 99999"
                 required
               />
             </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#99C2FF] mb-1.5" htmlFor="userMode">
-                Account Type
-              </label>
-              <select
-                id="userMode"
-                name="userMode"
-                value={formData.userMode}
-                onChange={handleInputChange}
-                className="bg-[#000E24] border border-[#002966] text-white rounded-lg py-2.5 px-4 w-full focus:outline-none focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] transition duration-300 cursor-pointer"
-              >
-                <option value="individual">Individual</option>
-                <option value="family">Family</option>
-                <option value="business">Business</option>
-              </select>
-            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="animate-fade-in-up animation-delay-300">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2" htmlFor="email">
+              Email Address
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="bg-slate-50 border border-slate-200 text-slate-900 rounded-xl py-2.5 px-4 w-full focus:outline-none focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all duration-300 placeholder-slate-400 text-sm font-medium focus:scale-[1.02] focus:shadow-lg focus:shadow-purple-500/5"
+              placeholder="name@example.com"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 animate-fade-in-up animation-delay-400">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#99C2FF] mb-1.5" htmlFor="password">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2" htmlFor="password">
                 Password
               </label>
               <input
@@ -178,14 +178,14 @@ const Register = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="bg-[#000E24]/60 border border-[#002966] text-white rounded-lg py-2.5 px-4 w-full focus:outline-none focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] transition duration-300 placeholder-[#002966]"
+                className="bg-slate-50 border border-slate-200 text-slate-900 rounded-xl py-2.5 px-4 w-full focus:outline-none focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all duration-300 placeholder-slate-400 text-sm font-medium focus:scale-[1.02] focus:shadow-lg focus:shadow-purple-500/5"
                 placeholder="••••••••"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-[#99C2FF] mb-1.5" htmlFor="confirmPassword">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2" htmlFor="confirmPassword">
                 Confirm Password
               </label>
               <input
@@ -194,37 +194,78 @@ const Register = () => {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
-                className="bg-[#000E24]/60 border border-[#002966] text-white rounded-lg py-2.5 px-4 w-full focus:outline-none focus:border-[#0066FF] focus:ring-1 focus:ring-[#0066FF] transition duration-300 placeholder-[#002966]"
+                className="bg-slate-50 border border-slate-200 text-slate-900 rounded-xl py-2.5 px-4 w-full focus:outline-none focus:bg-white focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all duration-300 placeholder-slate-400 text-sm font-medium focus:scale-[1.02] focus:shadow-lg focus:shadow-purple-500/5"
                 placeholder="••••••••"
                 required
               />
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="relative overflow-hidden bg-gradient-to-r from-[#0052CC] to-[#0066FF] hover:from-[#0066FF] hover:to-[#3385FF] text-white font-semibold py-3 px-6 rounded-lg transition duration-300 shadow-lg shadow-[#0066FF]/20 hover:shadow-[#0066FF]/40 transform hover:-translate-y-0.5 active:translate-y-0 w-full flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none mt-2"
-          >
-            {loading ? (
-              <span className="flex items-center space-x-2">
-                <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                </svg>
-                <span>Creating Account...</span>
-              </span>
-            ) : (
-              "Register Now"
-            )}
-          </button>
+          <div className="animate-fade-in-up animation-delay-500">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2">
+              Workspace Type
+            </label>
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <label className={`flex items-center justify-center p-3 rounded-xl border cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
+                formData.userMode === "individual"
+                  ? "bg-purple-50 border-purple-400 text-purple-700 font-bold shadow-md shadow-purple-500/5"
+                  : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+              }`}>
+                <input
+                  type="radio"
+                  name="userMode"
+                  value="individual"
+                  checked={formData.userMode === "individual"}
+                  onChange={handleInputChange}
+                  className="sr-only"
+                />
+                <span className="text-xs uppercase tracking-wider">Individual</span>
+              </label>
+
+              <label className={`flex items-center justify-center p-3 rounded-xl border cursor-pointer transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
+                formData.userMode === "corporate"
+                  ? "bg-purple-50 border-purple-400 text-purple-700 font-bold shadow-md shadow-purple-500/5"
+                  : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
+              }`}>
+                <input
+                  type="radio"
+                  name="userMode"
+                  value="corporate"
+                  checked={formData.userMode === "corporate"}
+                  onChange={handleInputChange}
+                  className="sr-only"
+                />
+                <span className="text-xs uppercase tracking-wider">Corporate</span>
+              </label>
+            </div>
+          </div>
+
+          <div className="animate-fade-in-up animation-delay-600">
+            <button
+              type="submit"
+              disabled={loading}
+              className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-purple-600 text-white font-black py-3 px-6 rounded-xl transition-all duration-300 shadow-md shadow-blue-500/10 hover:shadow-lg hover:shadow-purple-500/25 transform hover:-translate-y-0.5 active:translate-y-0.5 active:scale-[0.98] w-full flex items-center justify-center disabled:opacity-50 disabled:pointer-events-none text-sm uppercase tracking-wider cursor-pointer"
+            >
+              {loading ? (
+                <span className="flex items-center space-x-2">
+                  <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                  <span>Creating Account...</span>
+                </span>
+              ) : (
+                "Create Account"
+              )}
+            </button>
+          </div>
         </form>
 
         {/* Redirect Footer */}
-        <div className="mt-6 text-center text-sm text-[#99C2FF]">
+        <div className="mt-6 text-center text-xs text-slate-500 font-medium animate-fade-in-up animation-delay-700">
           Already have an account?{" "}
-          <Link to="/login" className="font-semibold text-[#0066FF] hover:text-[#3385FF] transition duration-200 ml-1">
-            Sign In here
+          <Link to="/login" className="font-bold text-blue-600 hover:text-blue-700 transition duration-200 ml-1 hover:underline">
+            Sign in
           </Link>
         </div>
       </div>

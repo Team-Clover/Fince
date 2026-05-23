@@ -1,245 +1,223 @@
 import React from "react";
 import {
-  FiActivity,
-  FiBarChart2,
-  FiCheckCircle,
-  FiClock,
-  FiPieChart,
-  FiShield,
+  FiFileText,
+  FiList,
+  FiTarget,
+  FiRepeat,
   FiTrendingUp,
-  FiUpload,
+  FiZap,
+  FiCheck,
+  FiCreditCard,
+  FiShield,
+  FiGrid
 } from "react-icons/fi";
 import LandingNav from "../components/LandingNav";
 import FeatureCard from "../components/FeatureCard";
+import Home from "../components/Home";
 import Footer from "../components/Footer";
 
 const Landing = () => {
+  // Stats Data
+  const stats = [
+    { value: "10M+", label: "Transactions Processed", icon: FiCreditCard },
+    { value: "95.6%", label: "AI Accuracy", icon: FiShield },
+    { value: "50+", label: "Expense Categories", icon: FiGrid },
+    { value: "25K+", label: "Financial Insights", icon: FiTrendingUp },
+  ];
+
+  // Features Data
+  const features = [
+    { icon: FiFileText, title: "AI Transaction Extraction", desc: "Automatically extract transactions from bank statements and invoices with high accuracy." },
+    { icon: FiList, title: "Smart Categorization", desc: "AI-powered categorization of income and expenses into smart custom categories." },
+    { icon: FiTarget, title: "Invoice OCR Analysis", desc: "Extract important details like amount, GST, merchant, date, and items from invoices." },
+    { icon: FiRepeat, title: "Recurring Payment Detection", desc: "Identify and track recurring payments like subscriptions, EMIs, and utilities automatically." },
+    { icon: FiTrendingUp, title: "Financial Insights", desc: "Get deep insights into your spending patterns, income sources, and savings opportunities." },
+    { icon: FiZap, title: "AI Recommendations", desc: "Receive personalized AI-powered recommendations to improve your financial health." },
+  ];
+
+  // How It Works Steps
+  const steps = [
+    { stepNum: "Step 1", title: "Upload Document", desc: "Upload your bank statement, invoice, or receipt in PDF, CSV, or image format." },
+    { stepNum: "Step 2", title: "AI Processing", desc: "Our AI extracts and processes all the financial data instantly." },
+    { stepNum: "Step 3", title: "Smart Categorization", desc: "Transactions are automatically categorized into relevant categories." },
+    { stepNum: "Step 4", title: "Generate Insights", desc: "Get detailed insights, analytics, and AI-powered recommendations." },
+  ];
+
+  // Testimonials
+  const testimonials = [
+    { name: "Priya Sharma", role: "Marketing Manager", avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&h=100&q=80", text: "Fince has completely transformed how I manage my finances. The AI insights are incredibly accurate and helpful." },
+    { name: "Rohit Verma", role: "Freelance Designer", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100&q=80", text: "The invoice analysis feature saves me so much time. Perfect tool for freelancers and businesses." },
+    { name: "Ankit Patel", role: "Business Owner", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&h=100&q=80", text: "Finally, a tool that understands my spending habits and gives actionable recommendations." }
+  ];
+
   return (
-    <div className="min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_rgba(139,92,246,0.25),_transparent_35%),linear-gradient(180deg,_#090816_0%,_#120b24_100%)] text-slate-100">
+    <div className="relative min-h-screen bg-[#FDFDFD] text-slate-900 overflow-hidden font-sans">
+      
+      {/* Background Grid Overlay */}
+      <div className="absolute inset-0 grid-overlay opacity-30 pointer-events-none z-0" />
+
+      {/* Decorative Glow Blobs */}
+      <div className="absolute top-[-10%] left-[-10%] h-[500px] w-[500px] rounded-full bg-blue-400/5 blur-[100px] pointer-events-none" />
+      <div className="absolute top-[40%] right-[-10%] h-[600px] w-[600px] rounded-full bg-violet-400/5 blur-[120px] pointer-events-none" />
+
       <LandingNav />
 
-      <main className="relative mx-auto flex max-w-7xl flex-col gap-24 px-6 pb-24 pt-28 sm:px-8">
-        <section
-          id="home"
-          className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-center"
-        >
-          <div className="space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-violet-400/25 bg-violet-500/10 px-4 py-2 text-sm text-violet-100">
-              AI FinTech Hackathon • Bank statement & invoice intelligence
-            </div>
-            <div className="space-y-6">
-              <h1 className="max-w-3xl text-5xl font-semibold leading-tight text-white sm:text-6xl">
-                AI-Based Bank Statement Analyzer with Invoice Intelligence
-              </h1>
-              <p className="max-w-2xl text-lg leading-8 text-slate-300">
-                Upload a single bank statement or invoice, then watch FinSight
-                AI extract transactions, categorize spending, identify recurring
-                payments, and deliver a smart financial summary with actionable
-                recommendations.
-              </p>
-            </div>
+      <main className="relative mx-auto flex max-w-7xl flex-col gap-24 px-6 pb-24 pt-28 sm:px-8 z-10">
+        
+        {/* SECTION 1: HERO SECTION */}
+        <Home activeLayout={1} />
 
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <a
-                href="#upload"
-                className="inline-flex items-center justify-center rounded-full bg-violet-500 px-6 py-3 text-base font-semibold text-white transition hover:bg-violet-400"
-              >
-                Upload your statement
-              </a>
-              <a
-                href="#features"
-                className="inline-flex items-center justify-center rounded-full border border-violet-400/30 bg-white/5 px-6 py-3 text-base font-semibold text-slate-100 transition hover:border-violet-300 hover:bg-white/10"
-              >
-                Explore Features
-              </a>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {[
-                { icon: FiUpload, label: "PDF / CSV / Image" },
-                { icon: FiPieChart, label: "Auto Categorization" },
-                { icon: FiShield, label: "Secure & Private" },
-                { icon: FiClock, label: "One-click analysis" },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-slate-300 shadow-xl shadow-slate-950/20"
-                >
-                  <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-200">
-                    <item.icon className="h-5 w-5" />
-                  </div>
-                  <p>{item.label}</p>
+        {/* SECTION 2: STATS SECTION */}
+        <section className="relative z-10">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {stats.map((stat, idx) => (
+              <div key={idx} className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_2px_8px_rgba(0,0,0,0.01)]">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-650 border border-blue-100/50">
+                  <stat.icon className="h-5.5 w-5.5" />
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="relative overflow-hidden rounded-[2rem] border border-violet-500/15 bg-white/5 p-6 shadow-2xl shadow-violet-950/20">
-            <img
-              src="https://images.unsplash.com/photo-1549923746-c502d488b3ea?auto=format&fit=crop&w=900&q=80"
-              alt="AI finance dashboard"
-              className="h-full w-full rounded-[1.75rem] object-cover"
-            />
-            <div className="absolute inset-x-6 bottom-6 rounded-3xl bg-slate-950/90 p-5 text-slate-100 shadow-2xl shadow-slate-950/40 backdrop-blur-xl sm:bottom-8">
-              <p className="text-xs uppercase tracking-[0.3em] text-violet-200/80">
-                Dashboard preview
-              </p>
-              <p className="mt-2 text-lg font-semibold">
-                Visual summaries with category breakdowns, income vs expense,
-                and AI recommendations.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section id="features" className="space-y-8">
-          <div className="max-w-3xl space-y-4">
-            <p className="text-sm uppercase tracking-[0.35em] text-violet-200/90">
-              Expected Features
-            </p>
-            <h2 className="text-4xl font-semibold text-white">
-              Built for smart finance visibility
-            </h2>
-            <p className="text-lg leading-8 text-slate-300">
-              Use AI to automatically extract transactions, categorize expenses
-              and income, discover recurring payments, and surface insights in
-              an intuitive dashboard.
-            </p>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-3">
-            <FeatureCard
-              icon={FiUpload}
-              title="Upload Statement or Invoice"
-              description="Accept PDF, CSV, or image uploads so users can analyze bank statements and invoices from multiple sources."
-            />
-            <FeatureCard
-              icon={FiBarChart2}
-              title="Expense Categorization"
-              description="Automatically sort transactions into categories like Food, Travel, Rent, UPI, Subscriptions, and Salary."
-            />
-            <FeatureCard
-              icon={FiTrendingUp}
-              title="AI Recommendations"
-              description="Deliver financial insights, unusual transaction alerts, and personalized advice to improve money awareness."
-            />
-          </div>
-        </section>
-
-        <section id="solutions" className="grid gap-10 lg:grid-cols-2">
-          <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-xl shadow-violet-950/20">
-            <span className="inline-flex rounded-full bg-violet-500/10 px-3 py-1 text-sm text-violet-100">
-              Bank Statement Analyzer
-            </span>
-            <h3 className="mt-5 text-3xl font-semibold text-white">
-              Analyze Indian bank statements
-            </h3>
-            <p className="mt-4 text-slate-300">
-              Upload a single Indian bank statement and let the system extract
-              date, narration, debit, credit and balance with optional OCR
-              support.
-            </p>
-            <ul className="mt-6 space-y-4 text-slate-200/90">
-              <li>• Total income and expenses summary</li>
-              <li>• Highest spending category and recurring payments</li>
-              <li>
-                • Unusual transaction detection and finance health insights
-              </li>
-            </ul>
-          </article>
-
-          <article className="rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-xl shadow-violet-950/20">
-            <span className="inline-flex rounded-full bg-violet-500/10 px-3 py-1 text-sm text-violet-100">
-              Invoice Analyzer
-            </span>
-            <h3 className="mt-5 text-3xl font-semibold text-white">
-              Extract invoices and receipts
-            </h3>
-            <p className="mt-4 text-slate-300">
-              Automatically parse merchant name, amount, date, tax details and
-              line items from invoices and receipts to provide expense clarity.
-            </p>
-            <ul className="mt-6 space-y-4 text-slate-200/90">
-              <li>• Merchant-wise spending and GST summaries</li>
-              <li>
-                • Category breakdown for utilities, medical, travel, and more
-              </li>
-              <li>• AI-generated financial summary and spending advice</li>
-            </ul>
-          </article>
-        </section>
-
-        <section id="outputs" className="space-y-10">
-          <div className="space-y-4">
-            <p className="text-sm uppercase tracking-[0.35em] text-violet-200/90">
-              Expected Outputs
-            </p>
-            <h2 className="text-4xl font-semibold text-white">
-              Insightful analytics made simple
-            </h2>
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-3">
-            {[
-              "Transaction categorization",
-              "Income vs expense summary",
-              "Category-wise breakdown",
-              "Recurring payment alerts",
-              "Unusual transaction detection",
-              "AI-generated financial summary",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-3xl border border-white/10 bg-white/5 p-6 text-slate-200 shadow-xl shadow-slate-950/20"
-              >
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-200">
-                  <FiCheckCircle className="h-5 w-5" />
+                <div className="space-y-0.5 leading-none">
+                  <p className="text-xl md:text-2xl font-extrabold text-slate-900">{stat.value}</p>
+                  <p className="text-[11px] md:text-xs font-semibold text-slate-450 uppercase tracking-wide">{stat.label}</p>
                 </div>
-                <p className="font-medium">{item}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <section
-          id="contact"
-          className="rounded-[2rem] border border-violet-500/20 bg-[#12071e]/90 p-8 shadow-2xl shadow-violet-950/30"
-        >
-          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
-            <div className="space-y-4">
-              <p className="uppercase tracking-[0.35em] text-violet-200/90">
-                Launch your AI finance app
-              </p>
-              <h2 className="text-4xl font-semibold text-white">
-                Ready to improve financial awareness?
-              </h2>
-              <p className="max-w-2xl text-slate-300 leading-8">
-                Build an experience that converts uploads into intelligence —
-                category-level expense insights, invoice parsing, and helpful
-                money recommendations powered by AI.
-              </p>
+        {/* SECTION 3: FEATURES SECTION */}
+        <section id="features" className="space-y-12 relative">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-blue-650 bg-blue-50 px-3 py-1 rounded-full">Features</span>
+            <h2 className="text-3xl font-extrabold text-slate-900 sm:text-4xl tracking-tight leading-none">Powerful Features for Smart Financial Management</h2>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((f, idx) => (
+              <FeatureCard key={idx} icon={f.icon} title={f.title} description={f.desc} />
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 4: HOW IT WORKS */}
+        <section id="solutions" className="grid gap-12 lg:grid-cols-[1fr_2.2fr] items-center">
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-blue-650 bg-blue-50 px-3 py-1 rounded-full inline-block">How It Works</span>
+              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight leading-none">Simple. Smart. Secure.</h2>
             </div>
-            <div className="space-y-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-6 text-slate-200">
-              <p className="text-sm uppercase tracking-[0.35em] text-violet-200/90">
-                Key benefits
-              </p>
-              <ul className="space-y-3 text-slate-300">
-                <li>• Simple upload workflow for one statement or invoice</li>
-                <li>• Fast AI extraction and categorization</li>
-                <li>• Clear dashboards for expense health</li>
-              </ul>
-              <a
-                href="#upload"
-                className="inline-flex w-full items-center justify-center rounded-full bg-violet-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-violet-400"
-              >
-                Start analysis now
-              </a>
+            <p className="text-sm md:text-base text-slate-500 font-medium leading-relaxed">
+              Our AI-powered process makes financial analysis effortless in just 4 simple steps.
+            </p>
+            <a href="/register" className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-violet-650 px-6 py-3 text-xs font-semibold text-white shadow-sm hover:from-blue-700 hover:to-violet-750 transition duration-150">
+              Get Started Now
+            </a>
+          </div>
+
+          <div className="relative flex flex-col md:flex-row justify-between gap-6">
+            <div className="absolute top-[26px] left-[24px] right-[24px] h-[1.5px] border-t border-dashed border-blue-200 hidden md:block z-0" />
+            {steps.map((step, idx) => (
+              <div key={idx} className="flex-1 flex flex-col items-center md:items-start text-center md:text-left z-10 bg-[#FDFDFD] md:pr-4">
+                <div className="w-12 h-12 rounded-full border-2 border-blue-600 bg-white text-blue-600 flex items-center justify-center mb-4 shrink-0 shadow-sm font-bold text-sm">
+                  {idx + 1}
+                </div>
+                <span className="text-[10px] font-bold text-blue-650 uppercase tracking-widest leading-none">{step.stepNum}</span>
+                <h3 className="text-sm md:text-base font-bold text-slate-900 mt-1">{step.title}</h3>
+                <p className="text-xs text-slate-450 leading-relaxed font-semibold mt-1 max-w-[200px]">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 5: DASHBOARD PREVIEW SECTION */}
+        <section id="outputs" className="grid gap-12 lg:grid-cols-[1.2fr_0.8fr] items-center">
+          <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-xl grid grid-cols-1 md:grid-cols-[1.3fr_0.9fr] gap-6 relative">
+            <div className="space-y-6">
+              <div className="border border-slate-100 rounded-xl p-4 shadow-sm bg-slate-50/50">
+                <span className="text-[10px] font-bold text-slate-400 block mb-0.5">Expenses Overview</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl font-extrabold text-slate-900">₹78,500</span>
+                  <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-0.5">▼ -8.2%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="border border-slate-100 rounded-xl p-4 shadow-sm bg-white flex flex-col justify-between">
+              <span className="text-[10px] font-bold text-slate-700 block mb-4">Top Categories</span>
+              <div className="space-y-3.5 flex-1 flex flex-col justify-center">
+                {[{ name: "Shopping", pct: 40 }, { name: "Food & Dining", pct: 30 }].map((cat, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex justify-between text-[9px] font-bold text-slate-500">
+                      <span>{cat.name}</span>
+                      <span>{cat.pct}%</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-gradient-to-r from-blue-500 to-violet-500 rounded-full" style={{ width: `${cat.pct}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-blue-650 bg-blue-50 px-3 py-1 rounded-full inline-block">Dashboard Preview</span>
+              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight leading-none">Everything You Need in One Beautiful Dashboard</h2>
+            </div>
+            <ul className="space-y-3 text-sm font-semibold text-slate-600">
+              {["Income vs Expense Overview", "Category-wise Spending Breakdown", "AI Financial Summary"].map((item, idx) => (
+                <li key={idx} className="flex items-center gap-3">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-100/50 shrink-0">
+                    <FiCheck className="h-3 w-3" />
+                  </span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
+        {/* SECTION 6: TESTIMONIALS SECTION */}
+        <section id="testimonials" className="space-y-12 relative">
+          <div className="text-center max-w-3xl mx-auto space-y-3">
+            <span className="text-[11px] font-bold uppercase tracking-widest text-blue-650 bg-blue-50 px-3 py-1 rounded-full">Trusted by Users</span>
+            <h2 className="text-3xl font-extrabold text-slate-900 sm:text-4xl tracking-tight leading-none">Loved by Thousands of Users</h2>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {testimonials.map((t, idx) => (
+              <div key={idx} className="relative rounded-2xl border border-slate-100 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.01)] flex flex-col justify-between">
+                <div className="text-blue-200 text-3xl font-serif leading-none mb-3">“</div>
+                <p className="text-xs md:text-sm text-slate-500 leading-relaxed font-semibold mb-6 italic">{t.text}</p>
+                <div className="flex items-center gap-3 pt-3 border-t border-slate-55">
+                  <img src={t.avatar} alt={t.name} className="h-9 w-9 rounded-full object-cover shrink-0" />
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-900 leading-none mb-0.5">{t.name}</h4>
+                    <p className="text-[10px] font-semibold text-slate-450">{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* SECTION 7: BOTTOM CTA */}
+        <section id="contact" className="relative rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/5 to-violet-500/10 border border-blue-100 p-8 sm:p-12 overflow-hidden">
+          <div className="grid gap-8 md:grid-cols-[1.2fr_0.8fr] items-center relative z-10">
+            <div className="space-y-6">
+              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl leading-tight">Transform Financial Data into <br />Smart Insights</h2>
+              <p className="text-slate-500 leading-relaxed font-medium text-sm md:text-base max-w-lg">Join thousands of users who trust our AI-powered platform for better financial decisions.</p>
+              <div className="flex flex-col gap-4 sm:flex-row pt-2">
+                <a href="/login" className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-violet-650 px-6 py-3 text-xs font-semibold text-white shadow-sm hover:from-blue-700 hover:to-violet-750 transition duration-150">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+                  <span>Upload Statement</span>
+                </a>
+              </div>
             </div>
           </div>
         </section>
 
-        <Footer />
       </main>
+
+      <Footer />
     </div>
   );
 };

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar.jsx';
 import { BiRupee } from 'react-icons/bi';
 import { FaUser, FaUsers } from 'react-icons/fa';
-import { FiPlus } from 'react-icons/fi';
+import { FiPlus, FiBell, FiChevronDown } from 'react-icons/fi';
 import { INCOME_PERIODS, USER_MODES } from '../Constants/Constants.js';
 
 const IncomeSetup = () => {
@@ -29,12 +29,23 @@ const IncomeSetup = () => {
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl -z-10 pointer-events-none translate-x-1/3 -translate-y-1/3"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl -z-10 pointer-events-none -translate-x-1/3 translate-y-1/3"></div>
 
-        <div className="max-w-4xl mx-auto space-y-8 pb-10">
+        <div className="max-w-4xl mx-auto space-y-8 pb-10 pt-4">
           
           {/* Header */}
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Income Setup</h1>
-            <p className="text-slate-500 mt-1">Manage your income sources</p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Income Setup</h1>
+              <p className="text-slate-500 mt-1">Manage your income sources</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-4 py-2 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-sm rounded-full">
+                <div className="w-2 h-2 rounded-full bg-pink-500"></div>
+                Personal Space
+              </div>
+              <button className="p-2.5 bg-white border border-gray-200 text-slate-700 rounded-xl shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center">
+                <FiBell size={20} />
+              </button>
+            </div>
           </div>
 
           {/* User Mode Card */}

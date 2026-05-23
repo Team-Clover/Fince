@@ -73,3 +73,51 @@ export const USER_MODES = [
   { id: 'personal', title: 'Personal Mode', description: 'Single income user' },
   { id: 'family', title: 'Family Mode', description: 'Multiple earning members' }
 ];
+
+export const SAAS_SUBSCRIPTIONS = [
+  { merchant: 'Netflix', category: 'Entertainment', interval: 'Monthly', amount: 649, confidence: 'High', nextBillingDate: '2026-06-12' },
+  { merchant: 'AWS Cloud', category: 'Infrastructure', interval: 'Monthly', amount: 4500, confidence: 'High', nextBillingDate: '2026-06-01' },
+  { merchant: 'Spotify', category: 'Entertainment', interval: 'Monthly', amount: 119, confidence: 'High', nextBillingDate: '2026-06-15' }
+];
+
+export const AI_STORY_FEED = `
+**Ecosystem Update**
+- Detected unusual spike in *Travel & Transport* this month (₹15,400 over average).
+- Your Netflix and Spotify subscriptions are healthy and within the Entertainment sub-budget.
+
+### Anomalies
+No duplicate transactions detected. All ledger entries match standard signature patterns.
+`;
+
+export const FINANCIAL_WELLNESS = {
+  score: 78,
+  status: 'Healthy Status',
+  consistency: 'High',
+  operationalRisk: 'Low Risk',
+  luxuryExposure: 'Moderate'
+};
+
+export const EXPENSE_PROJECTIONS = [
+  { category: 'Groceries', projectedNextMonth: 12500, risk: 'HIGH', confidence: 88 },
+  { category: 'Utilities', projectedNextMonth: 3200, risk: 'OPTIMAL', confidence: 95 },
+  { category: 'Entertainment', projectedNextMonth: 5000, risk: 'HIGH', confidence: 75 }
+];
+
+export const WEALTH_RECOMMENDATIONS = [
+  {
+    title: 'Seed Initial Ledger Data',
+    category: 'General',
+    action: 'Upload invoice receipts or log manual transactions to start generating AI wealth recommendations.',
+    impact: 'High',
+    priority: 'CRITICAL'
+  }
+];
+
+export const MONTHLY_BUDGETS = [
+  { id: 1, category: 'Food & Dining', percentage: 115, spent: 23000, limit: 20000 },
+  { id: 2, category: 'Transportation', percentage: 60, spent: 6000, limit: 10000 },
+  { id: 3, category: 'Entertainment', percentage: 45, spent: 4500, limit: 10000 },
+  { id: 4, category: 'Shopping', percentage: 90, spent: 18000, limit: 20000 },
+  { id: 5, category: 'Housing', percentage: 100, spent: 30000, limit: 30000 },
+  { id: 6, category: 'Utilities', percentage: 75, spent: 3750, limit: 5000 }
+];

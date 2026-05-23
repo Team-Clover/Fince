@@ -4,7 +4,7 @@ import cloudinary from "../config/cloudinary.js";
 import generateToken from "../config/utils.js";
 
 // Signup a new user
-export const signup = async (req, res) => {
+export const registerUserController = async (req, res) => {
   const { fullName, email, password, phone, userMode } = req.body;
   try {
     if (!fullName || !email || !password || !phone) {
@@ -46,7 +46,7 @@ export const signup = async (req, res) => {
 };
 
 // Controller to login a user
-export const login = async (req, res) => {
+export const loginUserController = async (req, res) => {
   try {
     const { email, password } = req.body;
     const userData = await User.findOne({ email });
@@ -108,7 +108,7 @@ export const updateProfile = async (req, res) => {
 };
 
 // Controller to logout a user
-export const logout = async (req, res) => {
+export const logoutUserController = async (req, res) => {
   try {
     return res.json({ success: true, message: "Logged out successfully" });
   } catch (error) {

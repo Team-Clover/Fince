@@ -140,3 +140,7 @@ dist-ssr/
 **/dist-ssr/
 
 !backend/.env
+
+# Ignore reference project folder
+FINCE/
+

@@ -18,6 +18,10 @@ const Budgets = () => {
   const [budgets, setBudgets] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Graph interactivity
+  const [hoverInfo, setHoverInfo] = useState(null); // { idx, x, limitY, spentY, limit, spent, category }
+  const [chartKey, setChartKey] = useState(0);
+
   // Date states
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
@@ -77,6 +81,8 @@ const Budgets = () => {
       if (res.ok) {
         const data = await res.json();
         setBudgets(data || []);
+        setChartKey((k) => k + 1);
+        setHoverInfo(null);
       }
     } catch (err) {
       console.error("Error fetching budgets:", err);
@@ -294,22 +300,64 @@ const Budgets = () => {
                   <p className="text-xs text-slate-500">
                     Visual share comparison across categorized limits (in ₹)
                   </p>
-                </div>
+                </div>                {/* Inject graph animations */}
+                <style>{`
+                  @keyframes drawLine {
+                    from { stroke-dashoffset: 1200; }
+                    to   { stroke-dashoffset: 0; }
+                  }
+                  @keyframes fadeArea {
+                    from { opacity: 0; }
+                    to   { opacity: 1; }
+                  }
+                `}</style>
 
                 {/* Smooth Curve SVG Graph */}
                 <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 relative h-64 overflow-hidden mt-4">
                   <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-gray-400 py-6 px-4">
-                    <span>Max</span>
-                    <span>75%</span>
-                    <span>50%</span>
-                    <span>25%</span>
-                    <span>0</span>
+                    {(() => {
+                      const maxVal = Math.max(...budgets.map(b => Math.max(b.limit, b.spent)), 1);
+                      return ['Max', '75%', '50%', '25%', '0'].map((l, i) => (
+                        <span key={i}>
+                          {i === 0 ? `₹${maxVal.toLocaleString()}` : l}
+                        </span>
+                      ));
+                    })()}
                   </div>
-                  <div className="ml-10 h-full border-b border-l border-gray-200 relative pt-6 pb-6">
+                  <div 
+                    className="ml-10 h-full border-b border-l border-gray-200 relative pt-6 pb-6"
+                    onMouseLeave={() => setHoverInfo(null)}
+                  >
                     <svg
+                      key={chartKey}
                       viewBox="0 0 400 100"
                       className="w-full h-full"
                       preserveAspectRatio="none"
+                      style={{ overflow: 'visible', cursor: 'crosshair' }}
+                      onMouseMove={(e) => {
+                        if (!budgets || budgets.length === 0) return;
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const mouseX = e.clientX - rect.left;
+                        const pct = Math.max(0, Math.min(1, mouseX / rect.width));
+                        const idx = Math.min(
+                          Math.round(pct * (budgets.length - 1)),
+                          budgets.length - 1
+                        );
+                        const maxVal = Math.max(...budgets.map(b => Math.max(b.limit, b.spent)), 1);
+                        const pointX = budgets.length > 1 ? (idx / (budgets.length - 1)) * 400 : 200;
+                        const limitY = 100 - (budgets[idx].limit / maxVal) * (100 - 10) - 5;
+                        const spentY = 100 - (budgets[idx].spent / maxVal) * (100 - 10) - 5;
+                        
+                        setHoverInfo({
+                          idx,
+                          svgX: pointX,
+                          limitY,
+                          spentY,
+                          limit: budgets[idx].limit,
+                          spent: budgets[idx].spent,
+                          category: budgets[idx].category
+                        });
+                      }}
                     >
                       <defs>
                         <linearGradient
@@ -404,10 +452,22 @@ const Budgets = () => {
 
                         return (
                           <>
+                            {/* Hover vertical guide line */}
+                            {hoverInfo && (
+                              <line
+                                x1={hoverInfo.svgX} y1="0" x2={hoverInfo.svgX} y2="100"
+                                stroke="#7c3aed" strokeWidth="0.8" strokeDasharray="3 3"
+                                strokeOpacity="0.5" vectorEffect="non-scaling-stroke"
+                              />
+                            )}
+
+                            {/* Limit Area with fade transition */}
                             <path
                               d={limitAreaPath}
                               fill="url(#limitGradient)"
+                              style={{ animation: 'fadeArea 0.8s ease-out forwards' }}
                             />
+                            {/* Limit Line with draw-in transition */}
                             <path
                               d={limitPath}
                               fill="none"
@@ -415,28 +475,78 @@ const Budgets = () => {
                               strokeWidth="2.5"
                               vectorEffect="non-scaling-stroke"
                               strokeDasharray="5,5"
+                              strokeDashoffset="1200"
+                              style={{ animation: 'drawLine 1.4s cubic-bezier(0.4,0,0.2,1) forwards' }}
                             />
 
+                            {/* Spent Area with fade transition */}
                             <path
                               d={spentAreaPath}
                               fill="url(#spentGradient)"
+                              style={{ animation: 'fadeArea 0.8s ease-out forwards' }}
                             />
+                            {/* Spent Line with draw-in transition */}
                             <path
                               d={spentPath}
                               fill="none"
                               stroke="#ef4444"
                               strokeWidth="2.5"
                               vectorEffect="non-scaling-stroke"
+                              strokeDashoffset="1200"
+                              style={{ animation: 'drawLine 1.4s cubic-bezier(0.4,0,0.2,1) 0.08s forwards' }}
                             />
+
+                            {/* Hover data circles */}
+                            {hoverInfo && (
+                              <>
+                                <circle
+                                  cx={hoverInfo.svgX}
+                                  cy={hoverInfo.limitY}
+                                  r="4"
+                                  fill="#3b82f6"
+                                  stroke="white"
+                                  strokeWidth="1.5"
+                                  vectorEffect="non-scaling-stroke"
+                                />
+                                <circle
+                                  cx={hoverInfo.svgX}
+                                  cy={hoverInfo.spentY}
+                                  r="4"
+                                  fill="#ef4444"
+                                  stroke="white"
+                                  strokeWidth="1.5"
+                                  vectorEffect="non-scaling-stroke"
+                                />
+                              </>
+                            )}
                           </>
                         );
                       })()}
                     </svg>
+
+                    {/* Floating Hover Tooltip */}
+                    {hoverInfo && (
+                      <div
+                        className="absolute pointer-events-none z-10 transition-all duration-75"
+                        style={{
+                          left: `calc(${(hoverInfo.svgX / 400) * 100}% + 8px)`,
+                          top: `calc(${(Math.min(hoverInfo.limitY, hoverInfo.spentY) / 100) * 100}% - 48px)`,
+                          transform: hoverInfo.svgX > 300 ? 'translateX(-110%)' : 'translateX(0)'
+                        }}
+                      >
+                        <div className="bg-slate-900 text-white text-[10px] font-bold px-3 py-2 rounded-xl shadow-xl whitespace-nowrap leading-relaxed">
+                          <div className="text-purple-300 font-extrabold capitalize border-b border-slate-700/50 pb-0.5 mb-1">{hoverInfo.category}</div>
+                          <div className="text-blue-300">Limit: ₹{hoverInfo.limit.toLocaleString()}</div>
+                          <div className="text-red-300">Spent: ₹{hoverInfo.spent.toLocaleString()}</div>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="absolute bottom-[-20px] left-0 w-full flex justify-between text-[10px] text-gray-400">
                       {budgets.map((b, idx) => (
                         <span
                           key={idx}
-                          className="truncate max-w-[50px] text-center"
+                          className="truncate max-w-[50px] text-center font-medium"
                           title={b.category}
                         >
                           {b.category.substring(0, 5)}..

@@ -6,7 +6,11 @@ import { z } from "zod";
 import {
   sendLoginEmail,
   sendRegistrationEmail,
+  sendEmail,
 } from "../config/email.js";
+
+// In-memory OTP store (production should use Redis/DB)
+const otpStore = new Map();
 
 // Signup a new user
 export const registerUserController = async (req, res) => {
@@ -310,6 +314,119 @@ export const walletLoginController = async (req, res) => {
     });
   } catch (error) {
     console.error("Wallet login error:", error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// ── Forgot Password: Step 1 — Request OTP ─────────────────────────────────
+export const forgotPasswordRequest = async (req, res) => {
+  const { email } = req.body;
+  try {
+    if (!email) {
+      return res.json({ success: false, message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
+    if (!user) {
+      return res.json({ success: false, message: "No account found with this email" });
+    }
+
+    // Mask phone: show "91" prefix + "****" + last 2 digits
+    const phone = user.phone || "";
+    let maskedPhone = "Not available";
+    if (phone.length >= 4) {
+      maskedPhone = `91******${phone.slice(-2)}`;
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store OTP with 10-minute expiry
+    otpStore.set(email.trim().toLowerCase(), {
+      otp,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+    });
+
+    // Send OTP via email
+    await sendEmail(
+      email,
+      "Fince Password Reset OTP",
+      `Hi ${user.fullName},\n\nYour password reset OTP is: ${otp}\n\nThis code expires in 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nBest regards,\nFince Team`
+    );
+
+    return res.json({
+      success: true,
+      maskedPhone,
+      message: "OTP sent to your registered email",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// ── Forgot Password: Step 2 — Verify OTP ──────────────────────────────────
+export const verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
+  try {
+    if (!email || !otp) {
+      return res.json({ success: false, message: "Email and OTP are required" });
+    }
+
+    const stored = otpStore.get(email.trim().toLowerCase());
+    if (!stored) {
+      return res.json({ success: false, message: "No OTP request found. Please request a new one." });
+    }
+
+    if (Date.now() > stored.expiresAt) {
+      otpStore.delete(email.trim().toLowerCase());
+      return res.json({ success: false, message: "OTP has expired. Please request a new one." });
+    }
+
+    if (stored.otp !== otp.trim()) {
+      return res.json({ success: false, message: "Invalid OTP. Please try again." });
+    }
+
+    return res.json({ success: true, message: "OTP verified successfully" });
+  } catch (error) {
+    console.error("Verify OTP error:", error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
+
+// ── Forgot Password: Step 3 — Reset Password ─────────────────────────────
+export const resetPassword = async (req, res) => {
+  const { email, otp, newPassword } = req.body;
+  try {
+    if (!email || !otp || !newPassword) {
+      return res.json({ success: false, message: "All fields are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.json({ success: false, message: "Password must be at least 6 characters" });
+    }
+
+    // Re-verify OTP
+    const stored = otpStore.get(email.trim().toLowerCase());
+    if (!stored || Date.now() > stored.expiresAt || stored.otp !== otp.trim()) {
+      return res.json({ success: false, message: "Invalid or expired OTP. Please restart." });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await User.findOneAndUpdate(
+      { email: email.trim().toLowerCase() },
+      { password: hashedPassword }
+    );
+
+    // Clear OTP
+    otpStore.delete(email.trim().toLowerCase());
+
+    return res.json({ success: true, message: "Password reset successfully! You can now sign in." });
+  } catch (error) {
+    console.error("Reset password error:", error.message);
     res.json({ success: false, message: error.message });
   }
 };

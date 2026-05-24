@@ -267,9 +267,9 @@ const Auth = ({ mode = "login" }) => {
                     <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2" htmlFor="login-password">
                       Password
                     </label>
-                    <a href="#" className="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition duration-200 uppercase tracking-wider">
+                    <Link to="/forgot-password" className="text-[10px] font-bold text-blue-600 hover:text-blue-700 transition duration-200 uppercase tracking-wider">
                       Forgot password?
-                    </a>
+                    </Link>
                   </div>
                   <input
                     type="password"

@@ -85,7 +85,33 @@ export async function sendLoginEmail(to, name) {
  * @param {string} name User's full name for personalization
  */
 export async function sendRegistrationEmail(to, name) {
-  const subject = "Welcome to Fince!";
-  const text = `Hi ${name},\n\nWelcome to Fince! Your account has been created successfully.\n\nYou can now track expenses, manage invoices, create budgets, and use Fince insights to stay on top of your finances.\n\nIf you did not create this account, please contact support immediately.\n\nBest regards,\nFince Team`;
+  const subject = "Welcome to Fince - Your finance journey starts here!";
+  const text = `Hi ${name},
+
+A big, warm welcome to Fince!
+
+Your account has been created successfully, and we are excited to have you with us. Fince is built to help you understand your money better, stay organized, and make smarter financial decisions with less stress.
+
+Here is what you can start doing right away:
+
+- Track your expenses and see where your money is going.
+- Upload and manage invoices in one place.
+- Create budgets that match your goals and lifestyle.
+- Review your financial history whenever you need it.
+- Use smart insights to spot patterns, opportunities, and areas where you can improve.
+- Explore dashboards designed for both personal and business finance.
+
+We built Fince to feel simple, useful, and reliable from the first day. Whether you are managing monthly spending, organizing invoices, planning a budget, or keeping an eye on business activity, your workspace is ready for you.
+
+To get started, sign in to your Fince account and complete your profile details. After that, you can begin adding invoices, reviewing transactions, setting budgets, and exploring your dashboard.
+
+Your privacy and security matter to us. If you did not create this account, please contact support immediately so we can help protect your information.
+
+Thank you for joining Fince. We are glad you are here, and we hope Fince becomes a helpful part of the way you manage your financial life.
+
+Welcome aboard!
+
+Best regards,
+Fince Team`;
   await sendEmail(to, subject, text);
 }

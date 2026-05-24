@@ -4,6 +4,7 @@ import Landing from "./pages/Landing.jsx";
 import Auth from "./pages/Auth.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import BusinessDashboard from "./pages/BusinessDashboard.jsx";
 import Chat from "./pages/Chat.jsx";
@@ -43,6 +44,7 @@ const App = () => {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* Protected routes */}
       <Route

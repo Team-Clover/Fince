@@ -7,7 +7,10 @@ import {
   updateProfile, 
   logoutUserController,
   linkFamily,
-  leaveFamily
+  leaveFamily,
+  forgotPasswordRequest,
+  verifyOtp,
+  resetPassword
 } from '../controllers/userController.js';
 import { protectRoute } from '../middleware/auth.js';
 
@@ -22,5 +25,10 @@ userRouter.get('/profile', protectRoute, checkAuth);
 userRouter.put('/update-profile', protectRoute, updateProfile);
 userRouter.post('/family/link', protectRoute, linkFamily);
 userRouter.post('/family/leave', protectRoute, leaveFamily);
+
+// Forgot Password Flow
+userRouter.post('/forgot-password', forgotPasswordRequest);
+userRouter.post('/verify-otp', verifyOtp);
+userRouter.post('/reset-password', resetPassword);
 
 export default userRouter;

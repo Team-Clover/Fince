@@ -15,7 +15,7 @@ import { FaWandMagicSparkles, FaBrain } from "react-icons/fa6";
 import { useAuth } from "../context/AuthContext.jsx";
 import { INITIAL_CHATS } from "../Constants/Constants.js";
 
-const API_URL = "http://localhost:6000";
+const API_URL = "http://localhost:5000";
 
 const Chat = () => {
   const { token, user } = useAuth();

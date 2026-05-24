@@ -27,7 +27,7 @@ import {
 } from "react-icons/fa6";
 import { toast } from "react-toastify";
 
-const API_URL = "http://localhost:6000";
+const API_URL = "http://localhost:5000";
 const COLORS = [
   "#8B5CF6",
   "#EC4899",

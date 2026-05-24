@@ -17,7 +17,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 
-const API_URL = "http://localhost:6000";
+const API_URL = "http://localhost:5000";
 
 const History = () => {
   const { token } = useAuth();

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   FiFileText,
   FiList,
@@ -19,6 +19,10 @@ import Footer from "../components/Footer";
 import { Link } from "react-router-dom";
 
 const Landing = () => {
+  // Pre-warm backend on landing page load (so it's ready by the time user clicks Sign In)
+  useEffect(() => {
+    fetch("https://fince.onrender.com/", { method: "GET" }).catch(() => {});
+  }, []);
   // Stats Data
   const stats = [
     { value: "10M+", label: "Transactions Processed", icon: FiCreditCard },

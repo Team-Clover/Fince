@@ -4,9 +4,19 @@ import { useAuth } from "../context/AuthContext.jsx";
 import logo2 from "../assets/images/logo2.jpeg";
 import { toast } from 'react-toastify';
 
+const API_URL = "https://fince.onrender.com";
+
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
+
+  // Pre-warm backend
+  const [serverReady, setServerReady] = useState(false);
+  useEffect(() => {
+    fetch(`${API_URL}/`, { method: "GET" })
+      .then(() => setServerReady(true))
+      .catch(() => setServerReady(true));
+  }, []);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -59,10 +69,7 @@ const Register = () => {
 
     if (result.success) {
       toast.success(result.message || "Registration successful! Redirecting...");
-      // Redirect after delay
-      setTimeout(() => {
-        navigate("/login");
-      }, 2000);
+      navigate("/login");
     } else {
       toast.error(result.message);
       setLoading(false);

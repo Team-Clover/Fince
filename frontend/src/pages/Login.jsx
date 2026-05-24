@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import logo2 from "../assets/images/logo2.jpeg";
@@ -15,9 +15,35 @@ import {
   FiEyeOff,
 } from "react-icons/fi";
 
+const API_URL = "https://fince.onrender.com";
+
 const Login = () => {
   const navigate = useNavigate();
   const { login, walletLogin } = useAuth();
+
+  // Backend warm-up status
+  const [serverReady, setServerReady] = useState(false);
+
+  useEffect(() => {
+    // Ping backend to wake it up and track readiness
+    const warmUp = async () => {
+      try {
+        await fetch(`${API_URL}/`, { method: "GET" });
+        setServerReady(true);
+      } catch {
+        // Retry after 3 seconds if first ping fails
+        setTimeout(async () => {
+          try {
+            await fetch(`${API_URL}/`, { method: "GET" });
+            setServerReady(true);
+          } catch {
+            setServerReady(true); // Give up tracking, let user try anyway
+          }
+        }, 3000);
+      }
+    };
+    warmUp();
+  }, []);
 
   // Tab: "email" | "wallet"
   const [activeTab, setActiveTab] = useState("email");
@@ -199,6 +225,19 @@ const Login = () => {
           <p className="text-xs text-slate-500 mt-1 font-medium">
             Sign in to your financial workspace
           </p>
+          {/* Server readiness indicator */}
+          {!serverReady && (
+            <div className="flex items-center gap-2 mt-3 px-3 py-1.5 bg-amber-50 border border-amber-100 rounded-full">
+              <FiLoader className="w-3 h-3 text-amber-500 animate-spin" />
+              <span className="text-[10px] font-semibold text-amber-600">Waking up server... first load may take a moment</span>
+            </div>
+          )}
+          {serverReady && (
+            <div className="flex items-center gap-2 mt-3 px-3 py-1.5 bg-emerald-50 border border-emerald-100 rounded-full">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-semibold text-emerald-600">Server ready</span>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}

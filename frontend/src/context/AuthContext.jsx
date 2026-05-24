@@ -5,11 +5,20 @@ const AuthContext = createContext();
 
 const API_URL = "https://fince.onrender.com";
 
+// Pre-warm the backend server on Render free tier (wakes it from cold sleep)
+const warmUpBackend = () => {
+  fetch(`${API_URL}/`, { method: "GET" }).catch(() => {});
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem("token") || null);
   const [loading, setLoading] = useState(true);
 
+  // Fire pre-warm immediately on app load
+  useEffect(() => {
+    warmUpBackend();
+  }, []);
   // Initialize and check authentication status on load
   useEffect(() => {
     const initializeAuth = async () => {

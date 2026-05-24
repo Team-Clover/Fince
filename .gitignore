@@ -80,7 +80,6 @@ dist
 
 # Gatsby files
 .cache/
-public
 
 # vuepress v2.x temp and cache directory
 .temp

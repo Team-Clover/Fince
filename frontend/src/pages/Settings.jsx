@@ -85,7 +85,7 @@ const Settings = () => {
     <div className="flex h-screen overflow-hidden bg-[#F8FAFC] text-slate-800 font-sans">
       <Sidebar />
       
-      <main className="flex-1 p-8 md:p-12 overflow-y-auto h-full relative">
+      <main className="flex-1 w-full h-full p-8 md:p-12 pb-28 md:pb-12 overflow-y-auto relative">
         {/* Background ambient light */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl -z-10 pointer-events-none translate-x-1/3 -translate-y-1/3"></div>
 

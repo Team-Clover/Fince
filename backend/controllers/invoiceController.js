@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import crypto from "crypto";
-import FormData from "form-data";
+import Tesseract from "tesseract.js";
 import Invoice from "../models/invoiceModel.js";
 import Transaction from "../models/transactionModel.js";
 import Budget from "../models/budgetModel.js";
@@ -15,7 +15,7 @@ import {
   awardTokens,
 } from "../config/blockchain.js";
 
-import { parseInvoiceTextLocally } from "../../aiml/services/gemini.js";
+import { analyzeInvoiceText } from "../../aiml/services/gemini.js";
 import { detectDuplicateInvoice } from "../../aiml/services/duplicateDetector.js";
 import { detectAnomaly } from "../../aiml/services/anomalyDetector.js";
 import { auditInvoiceFraud } from "../../aiml/services/gstPortalService.js";
@@ -168,69 +168,35 @@ export const uploadInvoice = async (req, res) => {
     let extractedDetails;
     let ocrText = "";
 
-    // RapidAPI OCR — primary OCR (no Gemini dependency)
+    // Local OCR — primary OCR (no Gemini dependency)
     if (req.io) {
       req.io.to(userId.toString()).emit("ocr_progress", {
         invoiceId: invoice._id,
         progress: 0.2,
-        status: "Scanning invoice with OCR...",
+        status: "Scanning invoice with Tesseract OCR...",
       });
     }
 
     const fileBuffer = fs.readFileSync(filePath);
-    const form = new FormData();
-
-    // Required fields
-    form.append("language", "eng");
-    form.append("isOverlayRequired", "false");
-    form.append("filetype", fileType === "pdf" ? "pdf" : "jpg");
-
-    // OCR.Space expects the key in the request header: apikey
-    const ocrApiKey = process.env.OCR_SPACE_API_KEY;
-
-    // Append file last
-    form.append("file", fileBuffer, {
-      filename: fileName,
-      contentType: mimeType,
-    });
-
-    const formHeaders = form.getHeaders();
-    const ocrHeaders = ocrApiKey
-      ? { apikey: ocrApiKey, ...formHeaders }
-      : formHeaders;
-
-    const ocrResponse = await fetch(process.env.OCR_SPACE_ENDPOINT, {
-      method: "POST",
-      headers: ocrHeaders,
-      body: form,
-    });
-
-    const ocrJson = await ocrResponse.json();
-    console.log(
-      "[OCR] Raw API response:",
-      JSON.stringify(ocrJson).substring(0, 600),
+    
+    // Tesseract.js local extraction
+    const { data: { text } } = await Tesseract.recognize(
+      fileBuffer,
+      'eng',
+      {
+        logger: m => {
+          if (m.status === 'recognizing text' && req.io) {
+            req.io.to(userId.toString()).emit("ocr_progress", {
+              invoiceId: invoice._id,
+              progress: 0.2 + (m.progress * 0.5), // progress from 0.2 to 0.7
+              status: `OCR scanning... ${Math.round(m.progress * 100)}%`,
+            });
+          }
+        }
+      }
     );
-
-    // Handle OCR.Space response format
-    if (
-      ocrJson?.IsErroredOnProcessing === false &&
-      ocrJson?.ParsedResults?.[0]?.ParsedText
-    ) {
-      // OCR.Space successful response
-      ocrText = ocrJson.ParsedResults[0].ParsedText;
-    } else if (ocrJson?.ParsedResults?.[0]?.ParsedText) {
-      // Fallback OCR.Space format
-      ocrText = ocrJson.ParsedResults[0].ParsedText;
-    } else if (typeof ocrJson?.text === "string") {
-      // Alternative text field
-      ocrText = ocrJson.text;
-    } else if (ocrJson?.results?.[0]?.text) {
-      // Other OCR API format
-      ocrText = ocrJson.results[0].text;
-    } else {
-      // Last resort: stringify full response so parser can still attempt extraction
-      ocrText = JSON.stringify(ocrJson);
-    }
+    
+    ocrText = text;
 
     console.log("[OCR] Extracted text sample:", ocrText.substring(0, 300));
 
@@ -242,8 +208,8 @@ export const uploadInvoice = async (req, res) => {
       });
     }
 
-    // Use local fallback parser (no Gemini) to extract structured fields from OCR text
-    extractedDetails = parseInvoiceTextLocally(ocrText);
+    // Use Gemini AI parser to extract structured fields from OCR text
+    extractedDetails = await analyzeInvoiceText(ocrText);
 
     invoice.ocrText = ocrText;
     invoice.extractedText = ocrText;

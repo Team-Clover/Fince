@@ -26,6 +26,21 @@ import {
   FaRegLightbulb,
 } from "react-icons/fa6";
 import { toast } from "react-toastify";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip as RechartsTooltip,
+  Legend,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  BarChart,
+  Bar
+} from "recharts";
 
 const API_URL = "http://localhost:5000";
 const COLORS = [
@@ -60,6 +75,7 @@ const Dashboard = () => {
   const [profileData, setProfileData] = useState(null);
   const [validatingReport, setValidatingReport] = useState(false);
   const [validatedReportResult, setValidatedReportResult] = useState(null);
+  const [showCertificateModal, setShowCertificateModal] = useState(false);
 
   // Interactive controls
   const [spendingPeriod, setSpendingPeriod] = useState("monthly"); // 'daily' | 'monthly' | 'yearly'
@@ -158,6 +174,7 @@ const Dashboard = () => {
       const data = await res.json();
       if (data.success) {
         setValidatedReportResult(data);
+        setShowCertificateModal(true);
         await fetchUserProfile();
         toast.update(toastId, {
           render: `🔒 Cryptographic validation certificate signed! Reward Earned: +${data.tokensAwarded} FINCE!`,
@@ -282,6 +299,31 @@ const Dashboard = () => {
     } finally {
       setAuditLoading(false);
     }
+  };
+
+  const handleDownloadCertificate = () => {
+    if (!validatedReportResult) return;
+    const certText = `FINCE LEDGER VALIDATION CERTIFICATE
+===================================
+Date: ${new Date().toLocaleString()}
+Hash: ${validatedReportResult.reportHash}
+
+Budget Compliance: ${validatedReportResult.sustainableSpendingBonus ? "Eco-Compliant" : "Standard"}
+Reward Earned: +${validatedReportResult.tokensAwarded} FINCE
+
+Status: SIGNED & VERIFIED
+===================================
+This cryptographic certificate validates the integrity of the ledger for the specified period.
+`;
+    const blob = new Blob([certText], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Fince_Certificate_${validatedReportResult.reportHash.substring(0, 8)}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   useEffect(() => {
@@ -534,12 +576,15 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
+      <div className="flex h-screen overflow-hidden bg-[#f8fafc]">
         <Sidebar />
-        <main className="flex-1 flex flex-col justify-center items-center gap-3">
-          <FiLoader className="w-8 h-8 text-blue-600 animate-spin" />
-          <span className="text-sm text-slate-500 font-mono">
-            Aggregating real-time financial intelligence...
+        <main className="flex-1 flex flex-col justify-center items-center gap-4">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-full border-[3px] border-slate-100" />
+            <div className="absolute inset-0 w-12 h-12 rounded-full border-[3px] border-purple-500 border-t-transparent animate-spin" />
+          </div>
+          <span className="text-xs text-slate-400 font-medium font-mono tracking-wide">
+            Loading financial intelligence...
           </span>
         </main>
       </div>
@@ -660,26 +705,32 @@ const Dashboard = () => {
     `### Financial Narrative\nLog transactions or upload invoices to kickstart your personalized AI narration feed! Currently, you have logged ${summary.transactionCount} transactions.`;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#F8FAFC] text-slate-800 font-sans">
+    <div className="flex h-screen overflow-hidden bg-[#f8fafc] text-slate-800 font-sans">
       <Sidebar />
 
-      <main className="flex-1 p-8 md:p-12 overflow-y-auto h-full relative">
-        {/* Background ambient light */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl -z-10 pointer-events-none translate-x-1/3 -translate-y-1/3"></div>
+      <main className="flex-1 w-full h-full p-6 md:p-10 pb-28 md:pb-10 overflow-y-auto relative">
+        {/* Background ambient decorations */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-purple-500/[0.04] via-blue-500/[0.03] to-transparent rounded-full blur-3xl -z-10 pointer-events-none translate-x-1/4 -translate-y-1/4" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-blue-500/[0.03] via-indigo-500/[0.02] to-transparent rounded-full blur-3xl -z-10 pointer-events-none -translate-x-1/4 translate-y-1/4" />
 
         {/* Welcome Banner */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 bg-white border border-slate-100 p-6 rounded-2xl shadow-sm">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">
-              Welcome back, {user?.fullName || "User"}!
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 bg-white/80 backdrop-blur-sm border border-slate-100/80 p-6 rounded-2xl shadow-sm relative overflow-hidden">
+          {/* Subtle mesh gradient decoration */}
+          <div className="absolute -top-20 -right-20 w-60 h-60 bg-gradient-to-bl from-purple-500/[0.06] to-blue-500/[0.04] rounded-full blur-2xl pointer-events-none" />
+          <div className="relative">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1.5 font-mono">
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            </p>
+            <h1 className="text-2xl font-extrabold text-slate-900 font-outfit tracking-tight">
+              Welcome back, {user?.fullName || "User"}
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-slate-500 text-[13px] mt-1 leading-relaxed">
               Overview of your live financial status and cognitive intelligence
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-4 py-2 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-sm rounded-full">
-              <div className="w-2 h-2 rounded-full bg-pink-500"></div>
+          <div className="flex items-center gap-2.5 relative">
+            <div className="flex items-center gap-2 px-3.5 py-1.5 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-100/60 text-purple-600 font-bold text-xs rounded-full">
+              <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
               {user?.userMode === "family"
                 ? "Family Space"
                 : user?.userMode === "business"
@@ -691,28 +742,28 @@ const Dashboard = () => {
             <div className="relative" ref={notificationRef}>
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-2.5 bg-white border border-gray-200 text-slate-700 rounded-xl shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center relative cursor-pointer"
+                className="p-2.5 bg-white border border-slate-200/80 text-slate-500 rounded-xl shadow-sm hover:shadow-md hover:border-purple-200 hover:text-purple-600 transition-all flex items-center justify-center relative cursor-pointer"
               >
-                <FiBell size={20} />
+                <FiBell size={18} />
                 {notifications.some((n) => !n.read) && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
                 )}
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2.5 w-80 bg-white border border-slate-200 shadow-xl rounded-2xl p-4 z-50 animate-scale-up text-left">
+                <div className="absolute right-0 mt-2.5 w-80 bg-white/95 backdrop-blur-xl border border-slate-200/80 shadow-xl rounded-2xl p-4 z-50 animate-scale-up text-left">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-2 mb-3">
                     <span className="font-bold text-sm text-slate-900">
                       Notifications
                     </span>
                     <button
                       onClick={handleMarkAllNotificationsRead}
-                      className="text-[10px] font-bold text-blue-600 hover:underline cursor-pointer"
+                      className="text-[10px] font-bold text-purple-600 hover:underline cursor-pointer"
                     >
                       Mark all read
                     </button>
                   </div>
-                  <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                     {notifications.length === 0 ? (
                       <div className="text-center text-xs text-slate-400 py-6 font-semibold">
                         No notifications yet.
@@ -721,15 +772,15 @@ const Dashboard = () => {
                       notifications.map((n) => (
                         <div
                           key={n.id}
-                          className={`p-2.5 rounded-xl border transition-all ${
+                          className={`p-3 rounded-xl border transition-all ${
                             n.read
                               ? "bg-white border-slate-100"
-                              : "bg-blue-50/20 border-blue-100"
+                              : "bg-purple-50/30 border-purple-100/60"
                           }`}
                         >
                           <div className="flex justify-between items-start gap-2">
                             <span
-                              className={`font-bold text-[11px] ${n.read ? "text-slate-800" : "text-blue-900"}`}
+                              className={`font-bold text-[11px] ${n.read ? "text-slate-800" : "text-purple-900"}`}
                             >
                               {n.title}
                             </span>
@@ -750,113 +801,87 @@ const Dashboard = () => {
 
             <button
               onClick={() => setShowManualModal(true)}
-              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-md shadow-blue-500/20 hover:shadow-lg transition-all text-sm ml-2 cursor-pointer"
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 via-purple-600 to-purple-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/25 hover:-translate-y-0.5 transition-all text-xs cursor-pointer"
             >
-              <FaPlusSolid /> Log Manual Expense
+              <FaPlusSolid size={10} /> Log Expense
             </button>
           </div>
         </div>
 
         {/* 4 Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-purple-500 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                Total Ledger Spend
-              </p>
-              <h2 className="text-2xl font-bold text-slate-900">
-                ₹
-                {summary.totalExpenses.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Avg/trans: ₹{Number(avgTrans).toLocaleString()} |{" "}
-                {summary.transactionCount} entries
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 text-xl font-bold">
-              ₹
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                Spent This Month
-              </p>
-              <h2 className="text-2xl font-bold text-slate-900">
-                ₹
-                {summary.monthlyExpenses.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Current calendar month
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 text-xl font-bold">
-              ₹
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-green-500 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                Estimated Tax / GST
-              </p>
-              <h2 className="text-2xl font-bold text-slate-900">
-                ₹
-                {Number(estimatedTax).toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                AI-Audited GST component
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600 text-xl font-bold">
-              ₹
-            </div>
-          </div>
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-yellow-500 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
-                Overall Budget Remaining
-              </p>
-              <h2 className="text-2xl font-bold text-slate-900">
-                ₹
-                {overallRemaining.toLocaleString(undefined, {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Limit: ₹{overallLimit.toLocaleString()} ({overallPct}%
-                remaining)
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600 text-xl font-bold">
-              ₹
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+          {[
+            {
+              label: 'Total Ledger Spend',
+              value: summary.totalExpenses,
+              sub: `Avg ₹${Number(avgTrans).toLocaleString()} · ${summary.transactionCount} entries`,
+              color: 'purple',
+              icon: <FiTrendingDown className="w-5 h-5" />,
+            },
+            {
+              label: 'Spent This Month',
+              value: summary.monthlyExpenses,
+              sub: 'Current calendar month',
+              color: 'blue',
+              icon: <BiRupee className="w-5 h-5" />,
+            },
+            {
+              label: 'Estimated Tax / GST',
+              value: Number(estimatedTax),
+              sub: 'AI-Audited GST component',
+              color: 'emerald',
+              icon: <FiFileText className="w-5 h-5" />,
+            },
+            {
+              label: 'Budget Remaining',
+              value: overallRemaining,
+              sub: `Limit ₹${overallLimit.toLocaleString()} · ${overallPct}% left`,
+              color: 'amber',
+              icon: <FiTarget className="w-5 h-5" />,
+            },
+          ].map((card, idx) => {
+            const colorMap = {
+              purple: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200/50', glow: 'shadow-purple-500/5' },
+              blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200/50', glow: 'shadow-blue-500/5' },
+              emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200/50', glow: 'shadow-emerald-500/5' },
+              amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200/50', glow: 'shadow-amber-500/5' },
+            };
+            const c = colorMap[card.color];
+            return (
+              <div key={idx} className={`dash-card p-5 flex items-start justify-between group stat-accent-${card.color === 'emerald' ? 'emerald' : card.color}`}>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    {card.label}
+                  </p>
+                  <h2 className="text-[22px] font-extrabold text-slate-900 font-outfit tracking-tight">
+                    ₹{card.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </h2>
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    {card.sub}
+                  </p>
+                </div>
+                <div className={`w-10 h-10 rounded-xl ${c.bg} ${c.border} border flex items-center justify-center ${c.text} group-hover:scale-110 transition-transform duration-300`}>
+                  {card.icon}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Row 1: Charts & Wellness */}
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5 mb-8">
           {/* Spending Trend */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+          <div className="dash-card p-6 flex flex-col justify-between">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
               <div>
-                <h3 className="text-lg font-bold text-slate-900 mb-1 capitalize">
+                <h3 className="text-base font-bold text-slate-900 capitalize font-outfit">
                   {spendingPeriod} Spending Trend
                 </h3>
-                <p className="text-slate-500 text-xs">
+                <p className="text-slate-400 text-[11px] mt-0.5">
                   Expenditure timeline over the selected period
                 </p>
               </div>
-              <div className="flex bg-slate-100 p-1 rounded-lg mt-4 sm:mt-0 border border-slate-200">
+              <div className="flex bg-slate-50 p-0.5 rounded-lg mt-3 sm:mt-0 border border-slate-200/60">
                 {["daily", "monthly", "yearly"].map((p) => (
                   <button
                     key={p}
@@ -865,7 +890,7 @@ const Dashboard = () => {
                       setChartKey((k) => k + 1);
                       setHoverInfo(null);
                     }}
-                    className={`px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-all cursor-pointer ${spendingPeriod === p ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-800"}`}
+                    className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all cursor-pointer ${spendingPeriod === p ? "bg-white shadow-sm text-slate-900 border border-slate-200/60" : "text-slate-400 hover:text-slate-700"}`}
                   >
                     {p}
                   </button>
@@ -873,430 +898,152 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Inject chart animation keyframes */}
-            <style>{`
-              @keyframes drawLine {
-                from { stroke-dashoffset: 1200; }
-                to   { stroke-dashoffset: 0; }
-              }
-              @keyframes fadeArea {
-                from { opacity: 0; }
-                to   { opacity: 1; }
-              }
-              @keyframes popDot {
-                from { r: 0; opacity: 0; }
-                to   { r: 4; opacity: 1; }
-              }
-            `}</style>
-
-            <div className="h-56 w-full relative">
-              <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-gray-400 pb-6">
-                {chartData && chartData.some((d) => d.amount > 0)
-                  ? (() => {
-                      const maxVal = Math.max(
-                        ...chartData.map((d) => d.amount),
-                      );
-                      return ["Max", "75%", "50%", "25%", "0"].map((l, i) => (
-                        <span key={i}>
-                          {i === 0 ? `₹${maxVal.toLocaleString()}` : l}
-                        </span>
-                      ));
-                    })()
-                  : ["Max", "75%", "50%", "25%", "0"].map((l, i) => (
-                      <span key={i}>{l}</span>
-                    ))}
-              </div>
-              <div
-                ref={svgContainerRef}
-                className="ml-8 h-full border-b border-gray-100 relative"
-                onMouseLeave={() => setHoverInfo(null)}
-              >
-                <svg
-                  key={chartKey}
-                  viewBox="0 0 400 100"
-                  className="w-full h-full"
-                  preserveAspectRatio="none"
-                  style={{
-                    overflow: "visible",
-                    cursor:
-                      chartData && chartData.some((d) => d.amount > 0)
-                        ? "crosshair"
-                        : "default",
-                  }}
-                  onMouseMove={(e) => {
-                    if (
-                      !chartData ||
-                      chartData.length < 2 ||
-                      !chartData.some((d) => d.amount > 0)
-                    )
-                      return;
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const mouseX = e.clientX - rect.left;
-                    const pct = mouseX / rect.width;
-                    const svgX = pct * 400;
-                    const idx = Math.min(
-                      Math.round(pct * (chartData.length - 1)),
-                      chartData.length - 1,
-                    );
-                    const maxVal = Math.max(
-                      ...chartData.map((d) => d.amount),
-                      1,
-                    );
-                    const pointX = (idx / (chartData.length - 1)) * 400;
-                    const pointY =
-                      100 - (chartData[idx].amount / maxVal) * (100 - 20) - 10;
-                    setHoverInfo({
-                      svgX: pointX,
-                      svgY: pointY,
-                      label: chartData[idx].name,
-                      amount: chartData[idx].amount,
-                    });
-                  }}
-                >
+            <div className="h-56 w-full relative -ml-4 mt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                   <defs>
-                    <linearGradient
-                      id="purpleGradient"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor="#7c3aed"
-                        stopOpacity="0.45"
-                      />
-                      <stop
-                        offset="70%"
-                        stopColor="#8b5cf6"
-                        stopOpacity="0.1"
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor="#8b5cf6"
-                        stopOpacity="0.0"
-                      />
+                    <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25}/>
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.02}/>
                     </linearGradient>
-                    <linearGradient
-                      id="strokeGradient"
-                      x1="0"
-                      y1="0"
-                      x2="1"
-                      y2="0"
-                    >
-                      <stop offset="0%" stopColor="#6366f1" />
-                      <stop offset="100%" stopColor="#a855f7" />
-                    </linearGradient>
-                    <filter id="glow">
-                      <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
-                      <feMerge>
-                        <feMergeNode in="coloredBlur" />
-                        <feMergeNode in="SourceGraphic" />
-                      </feMerge>
-                    </filter>
                   </defs>
-
-                  {/* Subtle horizontal grid lines */}
-                  {[25, 50, 75].map((pct) => (
-                    <line
-                      key={pct}
-                      x1="0"
-                      y1={100 - pct}
-                      x2="400"
-                      y2={100 - pct}
-                      stroke="#e2e8f0"
-                      strokeWidth="0.5"
-                      vectorEffect="non-scaling-stroke"
-                      strokeDasharray="4 4"
-                    />
-                  ))}
-
-                  {/* Hover vertical crosshair */}
-                  {hoverInfo && (
-                    <line
-                      x1={hoverInfo.svgX}
-                      y1="0"
-                      x2={hoverInfo.svgX}
-                      y2="100"
-                      stroke="#7c3aed"
-                      strokeWidth="0.8"
-                      vectorEffect="non-scaling-stroke"
-                      strokeDasharray="3 3"
-                      strokeOpacity="0.6"
-                    />
-                  )}
-
-                  {/* Filled gradient area — fade in */}
-                  <path
-                    d={svgAreaPath}
-                    fill="url(#purpleGradient)"
-                    style={{ animation: "fadeArea 0.8s ease-out forwards" }}
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{fill: '#94a3b8', fontSize: 10, fontWeight: 500}} dy={10} />
+                  <YAxis tickLine={false} axisLine={false} tick={{fill: '#94a3b8', fontSize: 10}} tickFormatter={(value) => `₹${value.toLocaleString()}`} dx={-5} width={60} />
+                  <RechartsTooltip 
+                    contentStyle={{ borderRadius: '14px', border: '1px solid rgba(15,23,42,0.06)', background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(12px)', boxShadow: '0 12px 40px rgba(15,23,42,0.1)' }}
+                    formatter={(value) => [`₹${Number(value).toLocaleString()}`, 'Amount']}
+                    labelStyle={{ color: '#475569', fontWeight: '700', marginBottom: '4px', fontSize: '11px' }}
                   />
-
-                  {/* Glowing shadow path — draw animation */}
-                  <path
-                    d={svgPath}
-                    fill="none"
-                    stroke="#7c3aed"
-                    strokeWidth="4"
-                    vectorEffect="non-scaling-stroke"
-                    strokeOpacity="0.15"
-                    filter="url(#glow)"
-                    strokeDasharray="1200"
-                    strokeDashoffset="1200"
-                    style={{
-                      animation:
-                        "drawLine 1.4s cubic-bezier(0.4,0,0.2,1) forwards",
-                    }}
-                  />
-
-                  {/* Main stroke — draw animation (slightly delayed) */}
-                  <path
-                    d={svgPath}
-                    fill="none"
-                    stroke="url(#strokeGradient)"
-                    strokeWidth="2.5"
-                    vectorEffect="non-scaling-stroke"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeDasharray="1200"
-                    strokeDashoffset="1200"
-                    style={{
-                      animation:
-                        "drawLine 1.4s cubic-bezier(0.4,0,0.2,1) 0.05s forwards",
-                    }}
-                  />
-
-                  {/* Data point circles — show on hover */}
-                  {chartData &&
-                    chartData.some((d) => d.amount > 0) &&
-                    hoverInfo &&
-                    (() => {
-                      const maxVal = Math.max(
-                        ...chartData.map((d) => d.amount),
-                        1,
-                      );
-                      return chartData.map((d, i) => {
-                        const px =
-                          chartData.length > 1
-                            ? (i / (chartData.length - 1)) * 400
-                            : 200;
-                        const py = 100 - (d.amount / maxVal) * (100 - 20) - 10;
-                        const isActive = Math.abs(px - hoverInfo.svgX) < 1;
-                        return (
-                          <circle
-                            key={i}
-                            cx={px}
-                            cy={py}
-                            r={isActive ? 5 : 2.5}
-                            fill={isActive ? "#7c3aed" : "#a78bfa"}
-                            stroke="white"
-                            strokeWidth="1.5"
-                            vectorEffect="non-scaling-stroke"
-                            style={{
-                              transition: "r 0.15s ease, fill 0.15s ease",
-                            }}
-                          />
-                        );
-                      });
-                    })()}
-
-                  {/* Animated end-dot — only show when there's real data and no hover */}
-                  {!hoverInfo &&
-                    chartData &&
-                    chartData.some((d) => d.amount > 0) &&
-                    (() => {
-                      const maxVal = Math.max(
-                        ...chartData.map((d) => d.amount),
-                        1,
-                      );
-                      const lastIdx = chartData.length - 1;
-                      const correctX = chartData.length > 1 ? 400 : 200;
-                      const ey =
-                        100 -
-                        (chartData[lastIdx].amount / maxVal) * (100 - 20) -
-                        10;
-                      return (
-                        <>
-                          <circle
-                            cx={correctX}
-                            cy={ey}
-                            r="4"
-                            fill="#7c3aed"
-                            vectorEffect="non-scaling-stroke"
-                          />
-                          <circle
-                            cx={correctX}
-                            cy={ey}
-                            r="7"
-                            fill="#7c3aed"
-                            fillOpacity="0.2"
-                            vectorEffect="non-scaling-stroke"
-                          >
-                            <animate
-                              attributeName="r"
-                              values="4;9;4"
-                              dur="2s"
-                              repeatCount="indefinite"
-                            />
-                            <animate
-                              attributeName="fill-opacity"
-                              values="0.3;0;0.3"
-                              dur="2s"
-                              repeatCount="indefinite"
-                            />
-                          </circle>
-                        </>
-                      );
-                    })()}
-                </svg>
-
-                {/* Hover tooltip */}
-                {hoverInfo && (
-                  <div
-                    className="absolute pointer-events-none z-10"
-                    style={{
-                      left: `calc(${(hoverInfo.svgX / 400) * 100}% + 8px)`,
-                      top: `calc(${(hoverInfo.svgY / 100) * 100}% - 36px)`,
-                      transform:
-                        hoverInfo.svgX > 300
-                          ? "translateX(-110%)"
-                          : "translateX(0)",
-                    }}
-                  >
-                    <div className="bg-slate-900 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-lg whitespace-nowrap">
-                      <div className="text-purple-300">{hoverInfo.label}</div>
-                      <div className="text-white">
-                        ₹
-                        {hoverInfo.amount.toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="absolute bottom-[-20px] left-0 w-full flex justify-between text-[10px] text-gray-400">
-                  {trendLabels.map((label, idx) => (
-                    <span key={idx} className="truncate max-w-[60px]">
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              </div>
+                  <Area type="monotone" dataKey="amount" stroke="#8b5cf6" strokeWidth={2.5} fillOpacity={1} fill="url(#colorAmount)" dot={{ r: 3, fill: '#8b5cf6', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 5, fill: '#7c3aed', stroke: '#fff', strokeWidth: 2 }} />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
           {/* Wellness Score */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
-            <h3 className="text-lg font-bold text-slate-900 mb-1 w-full text-left font-outfit font-bold">
+          <div className="dash-card p-6 flex flex-col items-center justify-center text-center">
+            <h3 className="text-base font-bold text-slate-900 mb-0.5 w-full text-left font-outfit">
               Financial Health
             </h3>
-            <p className="text-slate-500 text-xs w-full text-left mb-6">
-              Interactive audit of spending wellness
+            <p className="text-slate-400 text-[11px] w-full text-left mb-6">
+              Real-time wellness audit
             </p>
 
-            <div className="relative w-32 h-32 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90">
+            <div className="relative w-36 h-36 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 128 128">
+                <defs>
+                  <linearGradient id="wellnessGradient" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#8b5cf6" />
+                    <stop offset="100%" stopColor="#3b82f6" />
+                  </linearGradient>
+                </defs>
                 <circle
                   cx="64"
                   cy="64"
                   r={radius}
-                  className="text-slate-100"
-                  strokeWidth="8"
-                  stroke="currentColor"
+                  strokeWidth="7"
+                  stroke="#f1f5f9"
                   fill="transparent"
                 />
                 <circle
                   cx="64"
                   cy="64"
                   r={radius}
-                  className="text-purple-500 transition-all duration-1000 ease-out"
-                  strokeWidth="8"
+                  className="transition-all duration-1000 ease-out"
+                  strokeWidth="7"
                   strokeDasharray={circumference}
                   strokeDashoffset={strokeDashoffset}
                   strokeLinecap="round"
-                  stroke="currentColor"
+                  stroke="url(#wellnessGradient)"
                   fill="transparent"
                 />
               </svg>
               <div className="absolute flex flex-col items-center">
-                <span className="text-3xl font-extrabold text-slate-900">
+                <span className="text-3xl font-extrabold text-slate-900 font-outfit">
                   {wellnessScore}
                 </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase">
-                  Health
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                  Score
                 </span>
               </div>
             </div>
 
-            <div className="mt-4 px-3 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded-full">
-              {wellnessScore >= 80
-                ? "Excellent Status"
+            <div className={`mt-5 px-3.5 py-1.5 text-[10px] font-bold rounded-full ${
+              wellnessScore >= 80
+                ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                 : wellnessScore >= 60
-                  ? "Healthy Status"
-                  : "Needs Optimization"}
+                  ? 'bg-amber-50 text-amber-600 border border-amber-100'
+                  : 'bg-red-50 text-red-600 border border-red-100'
+            }`}>
+              {wellnessScore >= 80
+                ? "✦ Excellent"
+                : wellnessScore >= 60
+                  ? "◉ Healthy"
+                  : "⚠ Needs Optimization"}
             </div>
-            <p className="text-[10px] text-slate-400 mt-4 leading-relaxed">
-              Score is calculated in real-time based on your adherence to
-              monthly budgets and saving targets.
+            <p className="text-[10px] text-slate-400 mt-4 leading-relaxed max-w-[200px]">
+              Scored by budget adherence, savings rate, and spending consistency.
             </p>
           </div>
         </div>
 
         {/* Row 2: Categories & AI Auditor */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-5 mb-8">
           {/* Categories breakdown */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
-            <h3 className="text-lg font-bold text-slate-900 mb-1">
+          <div className="dash-card p-6 flex flex-col">
+            <h3 className="text-base font-bold text-slate-900 mb-0.5 font-outfit">
               Expense Categories
             </h3>
-            <p className="text-slate-500 text-xs mb-4">
+            <p className="text-slate-400 text-[11px] mb-4">
               Live expenditure distributions
             </p>
 
-            <div className="flex-1 flex flex-col gap-3 justify-center">
+            <div className="flex-1 flex flex-col gap-3 justify-center items-center relative h-64 mt-4">
               {categoryDistribution.length === 0 ? (
                 <div className="text-center text-xs text-slate-400 py-6 font-semibold">
                   No categorizations logged yet. Upload an invoice!
                 </div>
               ) : (
-                categoryDistribution.slice(0, 5).map((cat, idx) => {
-                  const pct = ((cat.value / totalCategorySpent) * 100).toFixed(
-                    0,
-                  );
-                  return (
-                    <div key={cat.name} className="w-full space-y-1">
-                      <div className="flex justify-between text-[11px] font-bold text-slate-700">
-                        <span className="capitalize">{cat.name}</span>
-                        <span>
-                          ₹{cat.value.toLocaleString()} ({pct}%)
-                        </span>
-                      </div>
-                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-700 ease-out"
-                          style={{
-                            width: `${pct}%`,
-                            backgroundColor: COLORS[idx % COLORS.length],
-                            boxShadow: `0 0 6px ${COLORS[idx % COLORS.length]}55`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryDistribution}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                    >
+                      {categoryDistribution.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)' }}
+                      formatter={(value) => [`₹${value.toLocaleString()}`, 'Amount']}
+                    />
+                    <Legend 
+                      verticalAlign="bottom" 
+                      height={36} 
+                      iconType="circle"
+                      formatter={(value, entry, index) => <span className="text-xs font-semibold text-slate-600 capitalize">{value}</span>}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
               )}
             </div>
           </div>
 
           {/* AI Auditor Narrative */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500 flex flex-col justify-between relative overflow-hidden">
+          <div className="dash-card p-6 flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500" />
             <div className="absolute top-4 right-4">
               <button
                 onClick={fetchAuditReport}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-purple-600 hover:bg-purple-50 transition-colors cursor-pointer"
                 title="Refresh AI Auditor"
               >
                 <FiActivity size={14} className="animate-pulse text-blue-500" />
@@ -1342,16 +1089,54 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Row 2.5: Budget & Savings Analytics */}
+        <div className="grid grid-cols-1 mb-8">
+          <div className="dash-card p-6 flex flex-col">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-base font-bold text-slate-900 font-outfit">
+                Budget & Savings Analysis
+              </h3>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">vs. Actual</span>
+            </div>
+            <p className="text-slate-400 text-[11px] mb-4">
+              Comparing your allocated budget limits against actual spending
+            </p>
+            <div className="h-64 w-full relative -ml-4">
+              {budgets.length === 0 ? (
+                 <div className="text-center text-xs text-slate-400 py-6 font-semibold flex items-center justify-center h-full">
+                   No budgets set yet. Go to Budgets to configure limits!
+                 </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={budgets.filter(b => b.category !== 'overall')} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <XAxis dataKey="category" tickLine={false} axisLine={false} tick={{fill: '#94a3b8', fontSize: 10, textTransform: 'capitalize'}} dy={10} />
+                    <YAxis tickLine={false} axisLine={false} tick={{fill: '#94a3b8', fontSize: 10}} tickFormatter={(value) => `₹${value}`} dx={-10} />
+                    <RechartsTooltip 
+                      cursor={{fill: '#f8fafc'}}
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)' }}
+                      formatter={(value) => [`₹${value.toLocaleString()}`, '']}
+                    />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                    <Bar dataKey="limit" name="Budget Limit" fill="#cbd5e1" radius={[4, 4, 0, 0]} barSize={20} />
+                    <Bar dataKey="spent" name="Actual Spent" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Row 3: Subscriptions & Family */}
-        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-6 mb-8">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-pink-500 flex flex-col justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5 mb-8">
+          <div className="dash-card p-6 flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-pink-500 via-rose-400 to-pink-500" />
             <div>
-              <h3 className="text-lg font-bold text-slate-900 mb-1">
+              <h3 className="text-base font-bold text-slate-900 mb-0.5 font-outfit">
                 Detected Active Subscriptions
               </h3>
-              <p className="text-slate-500 text-xs mb-6">
-                AI detected recurring charge billing intervals (SaaS, Utility,
-                Services)
+              <p className="text-slate-400 text-[11px] mb-5">
+                AI detected recurring charge billing intervals
               </p>
             </div>
 
@@ -1397,9 +1182,9 @@ const Dashboard = () => {
           </div>
 
           {/* Collaborative Family Space */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-between">
+          <div className="dash-card p-6 flex flex-col justify-between">
             <div>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-0.5">
                 <FiUsers className="text-purple-500 text-lg" />
                 <h3 className="text-lg font-bold text-slate-900">
                   Family Ledger Group
@@ -1478,8 +1263,9 @@ const Dashboard = () => {
         </div>
 
         {/* Row 4: AI Ecosystem Narrative */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 border-l-4 border-l-indigo-500 relative overflow-hidden mb-8">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl -z-10 pointer-events-none" />
+        <div className="dash-card p-8 relative overflow-hidden mb-8">
+          <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-indigo-500 via-purple-500 to-blue-500" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/[0.04] rounded-full blur-3xl -z-10 pointer-events-none" />
           <div className="flex justify-between items-center border-b border-slate-100 pb-5 mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-md">
@@ -1672,9 +1458,9 @@ const Dashboard = () => {
         </div>
 
         {/* Fince Web3 Cryptographic Ledger Audit & Token Rewards */}
-        <div className="bg-white border border-gray-100 p-8 rounded-2xl shadow-sm mb-8 space-y-6">
+        <div className="dash-card p-8 space-y-6 mb-8">
           <div>
-            <h3 className="font-bold text-lg text-slate-900 flex items-center gap-2 font-outfit">
+            <h3 className="font-bold text-base text-slate-900 flex items-center gap-2 font-outfit">
               ⛓️ Fince Cryptographic Ledger & Token Rewards
             </h3>
             <p className="text-xs text-slate-500 mt-1 font-medium">
@@ -1742,32 +1528,12 @@ const Dashboard = () => {
                 </p>
 
                 {validatedReportResult && (
-                  <div className="bg-white border border-slate-200 p-3.5 rounded-xl space-y-2 mt-2 font-mono text-[9px] shadow-inner text-slate-650">
-                    <div className="flex justify-between font-bold text-slate-800 text-[10px]">
-                      <span>Report Certificate:</span>
-                      <span className="text-emerald-600">SIGNED ✅</span>
-                    </div>
-                    <div
-                      className="truncate font-semibold text-slate-850 bg-slate-50 p-1.5 rounded border border-slate-100"
-                      title={validatedReportResult.reportHash}
-                    >
-                      {validatedReportResult.reportHash}
-                    </div>
-                    <div className="flex justify-between items-center text-[9.5px]">
-                      <span>Budget Compliance:</span>
-                      <span className="font-bold text-blue-600">
-                        {validatedReportResult.sustainableSpendingBonus
-                          ? "Eco-Compliant"
-                          : "Standard"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-[9.5px]">
-                      <span>Reward Received:</span>
-                      <span className="font-extrabold text-emerald-600">
-                        +{validatedReportResult.tokensAwarded} FINCE
-                      </span>
-                    </div>
-                  </div>
+                  <button
+                    onClick={() => setShowCertificateModal(true)}
+                    className="w-full mt-2 py-2 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200 hover:bg-emerald-100 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    View Active Certificate ✅
+                  </button>
                 )}
               </div>
 
@@ -1841,8 +1607,8 @@ const Dashboard = () => {
         </div>
 
         {/* Monthly Budgets Progress */}
-        <div className="bg-white border border-gray-100 p-8 rounded-2xl shadow-sm mb-8">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+        <div className="dash-card p-8 mb-8">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
             <div>
               <h4 className="font-bold text-lg text-slate-900">
                 Monthly Budgets Progress
@@ -1916,10 +1682,76 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Certificate Modal */}
+        {showCertificateModal && validatedReportResult && (
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-md flex justify-center items-center p-4">
+            <div className="bg-white/95 backdrop-blur-xl border border-slate-200/60 w-full max-w-md rounded-2xl shadow-2xl p-6 relative animate-scale-up">
+              <button
+                onClick={() => setShowCertificateModal(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                <FiX size={16} />
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 mx-auto bg-emerald-100 rounded-full flex items-center justify-center mb-3">
+                  <FiShield className="w-8 h-8 text-emerald-600" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 font-outfit">
+                  Validation Certificate
+                </h3>
+                <p className="text-slate-500 text-xs mt-1">
+                  Immutable Cryptographic Ledger Record
+                </p>
+              </div>
+
+              <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3 font-mono text-[11px] text-slate-700 mb-6">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                  <span className="font-bold text-slate-500">Status:</span>
+                  <span className="text-emerald-600 font-black tracking-widest bg-emerald-100 px-2 py-0.5 rounded text-[10px]">SIGNED ✅</span>
+                </div>
+                <div>
+                  <span className="block font-bold text-slate-500 mb-1">SHA-256 Hash:</span>
+                  <div className="break-all font-semibold text-slate-800 bg-white p-2 rounded border border-slate-200 shadow-sm text-[10px]">
+                    {validatedReportResult.reportHash}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center pt-2">
+                  <span className="font-bold text-slate-500">Budget Compliance:</span>
+                  <span className="font-bold text-blue-600">
+                    {validatedReportResult.sustainableSpendingBonus ? "Eco-Compliant" : "Standard"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-500">Reward Received:</span>
+                  <span className="font-extrabold text-emerald-600 text-sm">
+                    +{validatedReportResult.tokensAwarded} FINCE
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowCertificateModal(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-colors cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={handleDownloadCertificate}
+                  className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-xs shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <FiFileText /> Save Certificate
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Log Manual Expense Modal */}
         {showManualModal && (
-          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-center items-center p-4">
-            <div className="bg-white border border-slate-200 w-full max-w-md rounded-2xl shadow-2xl p-6 relative animate-scale-up">
+          <div className="fixed inset-0 z-50 bg-black/30 backdrop-blur-md flex justify-center items-center p-4">
+            <div className="bg-white/95 backdrop-blur-xl border border-slate-200/60 w-full max-w-md rounded-2xl shadow-2xl p-6 relative animate-scale-up">
               <button
                 onClick={() => setShowManualModal(false)}
                 className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"

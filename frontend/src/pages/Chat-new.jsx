@@ -227,7 +227,7 @@ const Chat = () => {
     <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
       <Sidebar />
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 w-full h-full flex flex-col pb-28 md:pb-0">
         {/* Sidebar Panel */}
         <div className="w-full lg:w-80 bg-white border-r border-slate-200 flex flex-col h-full relative">
           {/* Top Section */}

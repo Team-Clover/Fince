@@ -20,6 +20,13 @@ export const registerUserController = async (req, res) => {
       return res.json({ success: false, message: "Missing Details" });
     }
 
+    if (password.length < 6) {
+      return res.json({
+        success: false,
+        message: "Password must be at least 6 characters long",
+      });
+    }
+
     const user = await User.findOne({ email });
 
     if (user) {

@@ -4,7 +4,6 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "postinstall": "npm install --prefix ../aiml",
     "start": "node server.js",
     "dev": "nodemon server.js"
   },

@@ -2,6 +2,8 @@ import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import cloudinary from "../config/cloudinary.js";
 import generateToken from "../config/utils.js";
+import { z } from "zod";
+import { sendLoginEmail } from "../config/email.js";
 
 // Signup a new user
 export const registerUserController = async (req, res) => {
@@ -50,21 +52,28 @@ export const registerUserController = async (req, res) => {
 // Controller to login a user
 export const loginUserController = async (req, res) => {
   try {
-    const { email, password } = req.body;
-    const userData = await User.findOne({ email });
+    // Validate request body using Zod
+    const loginSchema = z.object({
+      email: z.string().email(),
+      password: z.string().min(6),
+    });
+    const parseResult = loginSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.json({ success: false, message: parseResult.error.errors.map(e => e.message).join(', ') });
+    }
+    const { email, password } = parseResult.data;
 
+    const userData = await User.findOne({ email });
     if (!userData) {
       return res.json({ success: false, message: "Invalid credentials" });
     }
-
     const isPasswordCorrect = await bcrypt.compare(password, userData.password);
-
     if (!isPasswordCorrect) {
       return res.json({ success: false, message: "Invalid credentials" });
     }
-
     const token = generateToken(userData._id);
-
+    // Send login notification email
+    await sendLoginEmail(userData.email, userData.fullName);
     return res.json({
       success: true,
       userData,

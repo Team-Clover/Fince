@@ -864,7 +864,7 @@ const InvoiceHistory = () => {
               </h4>
 
               <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
-                {blockchainResult.details?.length === 0 ? (
+                {!blockchainResult.details || blockchainResult.details.length === 0 ? (
                   <div className="text-center text-xs text-slate-400 py-6 font-semibold">
                     No block entries found. Sealing begins on confirmed
                     invoices.

@@ -85,6 +85,10 @@ const Login = () => {
       toast.error("Please enter your email and password.");
       return;
     }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long!");
+      return;
+    }
     setEmailLoading(true);
     try {
       const res = await login(email, password);

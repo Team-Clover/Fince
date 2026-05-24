@@ -11,6 +11,18 @@ const IncomeSetup = () => {
   const [amount, setAmount] = useState('');
   const [period, setPeriod] = useState('monthly');
   const [totalIncome, setTotalIncome] = useState(0);
+  
+  // Family mode state
+  const [members, setMembers] = useState([{ id: 1, name: 'You' }]);
+  const [newMemberName, setNewMemberName] = useState('');
+  const [selectedMember, setSelectedMember] = useState(1);
+
+  const handleAddMember = () => {
+    if (newMemberName.trim()) {
+      setMembers([...members, { id: Date.now(), name: newMemberName.trim() }]);
+      setNewMemberName('');
+    }
+  };
 
   const handleAddIncome = () => {
     if (amount && !isNaN(amount)) {
@@ -38,9 +50,9 @@ const IncomeSetup = () => {
               <p className="text-slate-500 mt-1">Manage your income sources</p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 px-4 py-2 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-sm rounded-full">
-                <div className="w-2 h-2 rounded-full bg-pink-500"></div>
-                Personal Space
+              <div className={`flex items-center gap-2 px-4 py-2 ${activeMode === 'personal' ? 'bg-pink-50 border-pink-100 text-pink-600' : 'bg-purple-50 border-purple-100 text-purple-600'} border font-bold text-sm rounded-full transition-colors`}>
+                <div className={`w-2 h-2 rounded-full ${activeMode === 'personal' ? 'bg-pink-500' : 'bg-purple-500'}`}></div>
+                {activeMode === 'personal' ? 'Personal Space' : 'Family Space'}
               </div>
               <button className="p-2.5 bg-white border border-gray-200 text-slate-700 rounded-xl shadow-sm hover:bg-gray-50 transition-all flex items-center justify-center">
                 <FiBell size={20} />
@@ -84,6 +96,42 @@ const IncomeSetup = () => {
               ))}
             </div>
           </div>
+
+          {/* Family Members Section (Only visible in Family Mode) */}
+          {activeMode === 'family' && (
+            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-md transition-all animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <h2 className="text-lg font-bold text-slate-900 mb-1">Family Members</h2>
+              <p className="text-slate-500 text-sm mb-6">Add members to track combined household income</p>
+              
+              <div className="flex flex-wrap gap-3 mb-6">
+                {members.map(member => (
+                  <div key={member.id} className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 text-indigo-700 rounded-xl font-semibold border border-indigo-100/50 shadow-sm">
+                    <FaUser size={12} className="text-indigo-500" />
+                    {member.name}
+                  </div>
+                ))}
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <input 
+                  type="text" 
+                  placeholder="Enter new member name..." 
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddMember()}
+                  className="flex-1 bg-[#F8FAFC] border border-gray-200 rounded-xl px-4 py-3 text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium placeholder:font-normal placeholder:text-gray-400"
+                />
+                <button 
+                  onClick={handleAddMember}
+                  disabled={!newMemberName.trim()}
+                  className="px-6 py-3 bg-slate-900 text-white rounded-xl font-semibold hover:bg-slate-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  <FiPlus size={18} />
+                  Add Member
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Total Income Display */}
           <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-8 md:p-10 rounded-2xl shadow-lg shadow-blue-600/20 text-white relative overflow-hidden group">
@@ -147,6 +195,21 @@ const IncomeSetup = () => {
                   ))}
                 </select>
               </div>
+
+              {activeMode === 'family' && (
+                <div className="space-y-2 md:col-span-2 animate-in fade-in zoom-in duration-300">
+                  <label className="text-xs font-semibold text-slate-600 uppercase tracking-wider">For Member</label>
+                  <select 
+                    value={selectedMember}
+                    onChange={(e) => setSelectedMember(Number(e.target.value))}
+                    className="w-full bg-[#F8FAFC] border border-gray-200 rounded-xl px-4 py-3 text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all font-medium appearance-none cursor-pointer"
+                  >
+                    {members.map(m => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             <button 

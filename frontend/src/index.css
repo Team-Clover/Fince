@@ -30,6 +30,7 @@ body {
   background: #ffffff;
   color: var(--text-dark);
   font-family:
+    "Plus Jakarta Sans",
     "Inter",
     system-ui,
     -apple-system,

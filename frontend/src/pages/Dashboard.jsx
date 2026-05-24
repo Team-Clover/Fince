@@ -813,7 +813,7 @@ const Dashboard = () => {
 
           {/* Wellness Score */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
-            <h3 className="text-lg font-bold text-slate-900 mb-1 w-full text-left font-outfit">Financial Health</h3>
+            <h3 className="text-lg font-bold text-slate-900 mb-1 w-full text-left font-outfit font-bold">Financial Health</h3>
             <p className="text-slate-500 text-xs w-full text-left mb-6">Interactive audit of spending wellness</p>
             
             <div className="relative w-32 h-32 flex items-center justify-center">

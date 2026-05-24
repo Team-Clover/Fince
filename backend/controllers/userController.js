@@ -183,3 +183,74 @@ export const leaveFamily = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+
+// Controller to login/register with wallet address
+export const walletLoginController = async (req, res) => {
+  const { walletAddress } = req.body;
+  try {
+    if (!walletAddress) {
+      return res.json({ success: false, message: "Wallet address is required" });
+    }
+
+    const cleanAddress = walletAddress.trim().toLowerCase();
+    
+    // Find existing user by walletAddress
+    let user = await User.findOne({ walletAddress: cleanAddress });
+
+    if (user) {
+      const token = generateToken(user._id);
+      return res.json({
+        success: true,
+        userData: user,
+        token,
+        message: "Logged in via wallet successfully",
+      });
+    }
+
+    // If no user exists, register them
+    const mockEmail = `wallet_${cleanAddress}@fince.com`;
+    const emailUser = await User.findOne({ email: mockEmail });
+    if (emailUser) {
+      // Link wallet to existing email user and login
+      emailUser.walletAddress = cleanAddress;
+      await emailUser.save();
+      const token = generateToken(emailUser._id);
+      return res.json({
+        success: true,
+        userData: emailUser,
+        token,
+        message: "Logged in via wallet successfully",
+      });
+    }
+
+    // Create new wallet user
+    const salt = await bcrypt.genSalt(10);
+    const randomPassword = Math.random().toString(36) + Math.random().toString(36);
+    const hashedPassword = await bcrypt.hash(randomPassword, salt);
+    const familyCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    const shortAddress = `${cleanAddress.substring(0, 6)}...${cleanAddress.slice(-4)}`;
+    const newUser = await User.create({
+      fullName: `Wallet User (${shortAddress})`,
+      email: mockEmail,
+      password: hashedPassword,
+      phone: "0000000000",
+      userMode: "individual",
+      familyCode,
+      walletAddress: cleanAddress,
+    });
+
+    const token = generateToken(newUser._id);
+
+    return res.json({
+      success: true,
+      userData: newUser,
+      token,
+      message: "Wallet account registered successfully",
+    });
+  } catch (error) {
+    console.error("Wallet login error:", error.message);
+    res.json({ success: false, message: error.message });
+  }
+};
+

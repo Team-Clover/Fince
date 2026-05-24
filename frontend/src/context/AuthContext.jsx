@@ -70,6 +70,33 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Wallet Login handler
+  const walletLogin = async (walletAddress) => {
+    try {
+      const response = await fetch(`${API_URL}/api/user/wallet-login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ walletAddress }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setUser(data.userData);
+        setToken(data.token);
+        localStorage.setItem("token", data.token);
+        return { success: true, message: data.message };
+      } else {
+        return { success: false, message: data.message || "Wallet authentication failed" };
+      }
+    } catch (error) {
+      console.error("Wallet login error:", error);
+      return { success: false, message: "Server connection failed" };
+    }
+  };
+
   // Register/Signup handler
   const register = async (userData) => {
     try {
@@ -130,7 +157,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, token, loading, login, register, logout, updateUserProfile }}>
+    <AuthContext.Provider value={{ user, setUser, token, loading, login, walletLogin, register, logout, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   );

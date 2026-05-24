@@ -24,7 +24,13 @@ const userSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
-        required: true,
+        trim: true,
+    },
+    walletAddress: {
+        type: String,
+        unique: true,
+        sparse: true,
+        lowercase: true,
         trim: true,
     },
     userMode: {

@@ -2,6 +2,7 @@ import express from 'express';
 import { 
   registerUserController, 
   loginUserController, 
+  walletLoginController,
   checkAuth, 
   updateProfile, 
   logoutUserController,
@@ -14,6 +15,7 @@ const userRouter = express.Router();
 
 userRouter.post('/register', registerUserController);
 userRouter.post('/login', loginUserController);
+userRouter.post('/wallet-login', walletLoginController);
 userRouter.post('/logout', logoutUserController);
 userRouter.get('/check-auth', checkAuth);
 userRouter.get('/profile', protectRoute, checkAuth);

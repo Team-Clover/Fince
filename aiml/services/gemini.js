@@ -917,3 +917,110 @@ This report has been compiled locally due to API tier limitations.
 `;
   }
 }
+
+// Local fallback for parsing SMS
+export function parseSMSTransactionLocally(smsText) {
+  const result = {
+    amount: 0,
+    merchant: "Unknown",
+    date: new Date(),
+    type: "expense",
+    category: "Operations"
+  };
+
+  if (!smsText) return result;
+  
+  const text = smsText.toLowerCase();
+
+  // Basic regex for amount
+  const amountRegex = /(?:rs|inr|₹)\s?\.?\s?([\d,]+\.?\d*)/i;
+  const matchAmount = smsText.match(amountRegex);
+  if (matchAmount && matchAmount[1]) {
+    result.amount = parseFloat(matchAmount[1].replace(/,/g, ""));
+  } else {
+    // try any number with decimals if explicit currency is missing
+    const genericAmountRegex = /\b(\d+[\.,]\d{2})\b/;
+    const genMatch = smsText.match(genericAmountRegex);
+    if (genMatch) {
+      result.amount = parseFloat(genMatch[1].replace(/,/g, ""));
+    }
+  }
+
+  // Type
+  if (text.includes("credited") || text.includes("received") || text.includes("deposit")) {
+    result.type = "income";
+  } else if (text.includes("debited") || text.includes("spent") || text.includes("paid")) {
+    result.type = "expense";
+  }
+
+  // Very basic merchant heuristic
+  if (text.includes("at ")) {
+    const split = text.split("at ")[1];
+    if (split) {
+      result.merchant = split.split(" ")[0].substring(0, 15);
+    }
+  } else if (text.includes("to ")) {
+    const split = text.split("to ")[1];
+    if (split) {
+      result.merchant = split.split(" ")[0].substring(0, 15);
+    }
+  }
+
+  // Use keyword categorizer
+  const keywordCat = applyKeywordCategorization(result.merchant, smsText);
+  if (keywordCat) {
+    result.category = keywordCat;
+  }
+
+  return result;
+}
+
+// AI parsed SMS
+export async function parseSMSTransaction(smsText) {
+  if (!smsText || smsText.trim() === "") {
+    return parseSMSTransactionLocally(smsText);
+  }
+
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const prompt = `
+      You are an expert financial transaction parser. Read the following SMS from a bank or payment service and extract the details into a JSON object.
+      SMS Text:
+      """
+      ${smsText}
+      """
+      Extract the following fields: 
+      - amount (number)
+      - type (string: "expense" if money was debited/spent, "income" if money was credited/received)
+      - merchant (string: the name of the receiver, shop, or sender)
+      - date (string: YYYY-MM-DD. Use today's date if not specified)
+      - category (string: guess a category based on the merchant. Default to "Operations" if unknown. Examples: Food, Travel, Utilities, Shopping)
+      
+      Respond ONLY with valid JSON. Do not write markdown tags.
+    `;
+
+    const response = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: { responseMimeType: "application/json" },
+    });
+
+    const responseTextObj = response.response;
+    const resultText =
+      typeof responseTextObj.text === "function"
+        ? await responseTextObj.text()
+        : responseTextObj.text;
+    const parsedData = JSON.parse(resultText);
+
+    return {
+      amount: Number(parsedData.amount) || 0,
+      type: parsedData.type === "income" ? "income" : "expense",
+      merchant: parsedData.merchant || "Unknown",
+      date: parsedData.date ? new Date(parsedData.date) : new Date(),
+      category: parsedData.category || "Operations"
+    };
+
+  } catch (error) {
+    console.warn("Gemini parseSMSTransaction failed, applying local fallback parser:", error.message);
+    return parseSMSTransactionLocally(smsText);
+  }
+}

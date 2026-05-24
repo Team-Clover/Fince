@@ -8,6 +8,7 @@ import aiRouter from './routes/aiRoute.js';
 import budgetRouter from './routes/budgetRoute.js';
 import analyticsRouter from './routes/analyticsRoute.js';
 import alertRouter from './routes/alertRoute.js';
+import transactionRouter from './routes/transactionRoute.js';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.use('/api/ai', aiRouter);
 app.use('/api/budgets', budgetRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/alerts', alertRouter);
+app.use('/api/transactions', transactionRouter);
 
 app.get('/', (req, res) => {
     res.send('Hello, World!');

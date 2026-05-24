@@ -78,3 +78,14 @@ export async function sendLoginEmail(to, name) {
   const text = `Hi ${name},\n\nYou have just logged in to your Fince account.\n\nIf you are a business user, access your Business Dashboard for advanced analytics and team features.\n\nIf this login was not initiated by you, please reset your password immediately or contact support.\n\nThank you for choosing Fince!\n\nBest regards,\nFince Team`;
   await sendEmail(to, subject, text);
 }
+
+/**
+ * Send a registration welcome email.
+ * @param {string} to Recipient email address
+ * @param {string} name User's full name for personalization
+ */
+export async function sendRegistrationEmail(to, name) {
+  const subject = "Welcome to Fince!";
+  const text = `Hi ${name},\n\nWelcome to Fince! Your account has been created successfully.\n\nYou can now track expenses, manage invoices, create budgets, and use Fince insights to stay on top of your finances.\n\nIf you did not create this account, please contact support immediately.\n\nBest regards,\nFince Team`;
+  await sendEmail(to, subject, text);
+}

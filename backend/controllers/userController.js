@@ -3,7 +3,10 @@ import bcrypt from "bcryptjs";
 import cloudinary from "../config/cloudinary.js";
 import generateToken from "../config/utils.js";
 import { z } from "zod";
-import { sendLoginEmail } from "../config/email.js";
+import {
+  sendLoginEmail,
+  sendRegistrationEmail,
+} from "../config/email.js";
 
 // Signup a new user
 export const registerUserController = async (req, res) => {
@@ -36,6 +39,11 @@ export const registerUserController = async (req, res) => {
     });
 
     const token = generateToken(newUser._id);
+
+    // Send registration notification email in background (don't block signup)
+    sendRegistrationEmail(newUser.email, newUser.fullName).catch((err) =>
+      console.error("Registration email failed (non-blocking):", err.message)
+    );
 
     // Don't return password hash in response
     const safeUser = newUser.toObject();

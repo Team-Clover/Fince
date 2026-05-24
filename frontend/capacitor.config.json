@@ -1,0 +1,6 @@
+{
+  "appId": "com.fince.app",
+  "appName": "Fince",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

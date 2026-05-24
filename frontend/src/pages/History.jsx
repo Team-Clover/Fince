@@ -17,7 +17,7 @@ import {
 } from "react-icons/fi";
 import { toast } from "react-toastify";
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://fince.onrender.com";
 
 const History = () => {
   const { token } = useAuth();

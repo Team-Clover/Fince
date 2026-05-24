@@ -42,7 +42,7 @@ import {
   Bar
 } from "recharts";
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://fince.onrender.com";
 const COLORS = [
   "#8B5CF6",
   "#EC4899",

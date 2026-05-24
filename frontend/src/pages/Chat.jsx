@@ -15,7 +15,7 @@ import { FaWandMagicSparkles, FaBrain } from "react-icons/fa6";
 import { useAuth } from "../context/AuthContext.jsx";
 import { INITIAL_CHATS } from "../Constants/Constants.js";
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://fince.onrender.com";
 
 const Chat = () => {
   const { token, user } = useAuth();

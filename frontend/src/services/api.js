@@ -3,7 +3,7 @@
  * Handles all HTTP requests with proper error handling and authentication
  */
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://fince.onrender.com";
 
 // Helper function to get auth headers
 const getHeaders = (includeContentType = true) => {

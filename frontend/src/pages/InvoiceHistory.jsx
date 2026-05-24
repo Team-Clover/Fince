@@ -21,7 +21,7 @@ import { LuScan } from "react-icons/lu";
 import { MdOutlineAccountBalanceWallet } from "react-icons/md";
 import { toast } from "react-toastify";
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://fince.onrender.com";
 
 const InvoiceHistory = () => {
   const { user } = useAuth();

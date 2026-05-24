@@ -232,11 +232,14 @@ const Dashboard = () => {
       }
       if (budgetsRes.ok) {
         const budgetsJson = await budgetsRes.json();
-        setBudgets(budgetsJson);
+        // Handle both array and object responses (e.g. { budgets: [...] } or [...])
+        const budgetsArr = Array.isArray(budgetsJson) ? budgetsJson : (budgetsJson?.budgets || budgetsJson?.data || []);
+        setBudgets(Array.isArray(budgetsArr) ? budgetsArr : []);
       }
       if (subsRes.ok) {
         const subsJson = await subsRes.json();
-        setSubscriptions(subsJson || []);
+        const subsArr = Array.isArray(subsJson) ? subsJson : (subsJson?.subscriptions || subsJson?.data || []);
+        setSubscriptions(Array.isArray(subsArr) ? subsArr : []);
       }
       if (intelligenceRes.ok) {
         const intelJson = await intelligenceRes.json();
@@ -244,7 +247,8 @@ const Dashboard = () => {
       }
       if (alertsRes.ok) {
         const alertsJson = await alertsRes.json();
-        const mapped = alertsJson.map((alert, idx) => ({
+        const alertsArr = Array.isArray(alertsJson) ? alertsJson : (alertsJson?.alerts || alertsJson?.data || []);
+        const mapped = (Array.isArray(alertsArr) ? alertsArr : []).map((alert, idx) => ({
           id: alert._id || idx,
           title:
             alert.type === "budget_exceeded"

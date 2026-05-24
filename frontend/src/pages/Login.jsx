@@ -67,9 +67,9 @@ const Login = () => {
         // Check userMode for business
         const userData = JSON.parse(localStorage.getItem("userData")) || null;
         if (userData && userData.userMode === "business") {
-          setTimeout(() => navigate("/business-dashboard"), 800);
+          navigate("/business-dashboard");
         } else {
-          setTimeout(() => navigate("/dashboard"), 800);
+          navigate("/dashboard");
         }
       } else {
         toast.error(res.message || "Invalid credentials");
@@ -115,7 +115,7 @@ const Login = () => {
           isLoading: false,
           autoClose: 1500,
         });
-        setTimeout(() => navigate("/dashboard"), 1500);
+        navigate("/dashboard");
       } else {
         throw new Error(res.message || "Wallet auth failed");
       }
@@ -139,40 +139,36 @@ const Login = () => {
     setWalletLoading(true);
     setWalletStatus("connecting");
     const toastId = toast.loading("Simulating wallet connection...");
-    setTimeout(async () => {
+    try {
       setWalletStatus("signing");
-      toast.update(toastId, { render: "Simulating signature validation..." });
-      setTimeout(async () => {
-        try {
-          const res = await walletLogin(addr);
-          if (res.success) {
-            setWalletStatus("success");
-            toast.update(toastId, {
-              render: `\u2705 Connected ${addr.substring(0, 6)}...${addr.slice(-4)}!`,
-              type: "success", isLoading: false, autoClose: 1500,
-            });
-            // Check userMode for business
-            const userData = JSON.parse(localStorage.getItem("userData")) || null;
-            if (userData && userData.userMode === "business") {
-              setTimeout(() => navigate("/business-dashboard"), 1500);
-            } else {
-              setTimeout(() => navigate("/dashboard"), 1500);
-            }
-          } else {
-            throw new Error(res.message || "Wallet auth failed");
-          }
-        } catch (err) {
-          setWalletStatus("error");
-          toast.update(toastId, {
-            render: err.message || "Simulated login failed",
-            type: "error",
-            isLoading: false,
-            autoClose: 4000,
-          });
-          setWalletLoading(false);
+      const res = await walletLogin(addr);
+      if (res.success) {
+        setWalletStatus("success");
+        toast.update(toastId, {
+          render: `\u2705 Connected ${addr.substring(0, 6)}...${addr.slice(-4)}!`,
+          type: "success", isLoading: false, autoClose: 1000,
+        });
+        // Check userMode for business
+        const userData = JSON.parse(localStorage.getItem("userData")) || null;
+        if (userData && userData.userMode === "business") {
+          navigate("/business-dashboard");
+        } else {
+          navigate("/dashboard");
         }
-      }, 1000);
-    }, 1000);
+      } else {
+        throw new Error(res.message || "Wallet auth failed");
+      }
+    } catch (err) {
+      setWalletStatus("error");
+      toast.update(toastId, {
+        render: err.message || "Simulated login failed",
+        type: "error",
+        isLoading: false,
+        autoClose: 4000,
+      });
+    } finally {
+      setWalletLoading(false);
+    }
   };
 
   return (

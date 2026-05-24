@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext();
 
-const API_URL = "http://localhost:4000";
+const API_URL = "http://localhost:6000";
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -62,7 +62,10 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("token", data.token);
         return { success: true, message: data.message };
       } else {
-        return { success: false, message: data.message || "Invalid credentials" };
+        return {
+          success: false,
+          message: data.message || "Invalid credentials",
+        };
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -89,7 +92,10 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("token", data.token);
         return { success: true, message: data.message };
       } else {
-        return { success: false, message: data.message || "Wallet authentication failed" };
+        return {
+          success: false,
+          message: data.message || "Wallet authentication failed",
+        };
       }
     } catch (error) {
       console.error("Wallet login error:", error);
@@ -116,7 +122,10 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem("token", data.token);
         return { success: true, message: data.message };
       } else {
-        return { success: false, message: data.message || "Registration failed" };
+        return {
+          success: false,
+          message: data.message || "Registration failed",
+        };
       }
     } catch (error) {
       console.error("Registration error:", error);
@@ -157,7 +166,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, token, loading, login, walletLogin, register, logout, updateUserProfile }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        token,
+        loading,
+        login,
+        walletLogin,
+        register,
+        logout,
+        updateUserProfile,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

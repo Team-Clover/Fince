@@ -11,7 +11,7 @@ import { FaWandMagicSparkles, FaPiggyBank } from "react-icons/fa6";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "react-toastify";
 
-const API_URL = "http://localhost:4000";
+const API_URL = "http://localhost:6000";
 
 const Budgets = () => {
   const { user } = useAuth();
@@ -130,7 +130,7 @@ const Budgets = () => {
   const handleSaveBudget = async (e) => {
     e.preventDefault();
     if (!limit || isNaN(limit) || Number(limit) <= 0) {
-      toast.error('Please enter a valid budget limit.');
+      toast.error("Please enter a valid budget limit.");
       return;
     }
 
@@ -152,7 +152,7 @@ const Budgets = () => {
       if (res.ok) {
         setLimit("");
         fetchBudgets();
-        toast.success('Budget limit saved!');
+        toast.success("Budget limit saved!");
       } else {
         const data = await res.json();
         toast.error(data.message || "Error saving budget limit.");
@@ -174,7 +174,9 @@ const Budgets = () => {
     }
 
     setAiAllocateLoading(true);
-    const toastId = toast.loading('Gemini is analyzing your spending patterns...');
+    const toastId = toast.loading(
+      "Gemini is analyzing your spending patterns...",
+    );
     try {
       const res = await fetch(`${API_URL}/api/budgets/ai-allocate`, {
         method: "POST",
@@ -190,7 +192,12 @@ const Budgets = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        toast.update(toastId, { render: 'AI budget allocation complete!', type: 'success', isLoading: false, autoClose: 3000 });
+        toast.update(toastId, {
+          render: "AI budget allocation complete!",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
         setAiAllocateRationale(
           data.rationale || "AI budget allocation complete.",
         );
@@ -198,18 +205,28 @@ const Budgets = () => {
         fetchBudgets();
       } else {
         const data = await res.json();
-        toast.update(toastId, { render: data.message || 'Error allocating budgets.', type: 'error', isLoading: false, autoClose: 3000 });
+        toast.update(toastId, {
+          render: data.message || "Error allocating budgets.",
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
       }
     } catch (err) {
       console.error("Error in AI budget allocation:", err);
-      toast.update(toastId, { render: 'Connection error.', type: 'error', isLoading: false, autoClose: 3000 });
+      toast.update(toastId, {
+        render: "Connection error.",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
     } finally {
       setAiAllocateLoading(false);
     }
   };
 
   const handleDeleteBudget = async (id) => {
-    const toastId = toast.loading('Deleting budget...');
+    const toastId = toast.loading("Deleting budget...");
     try {
       const res = await fetch(`${API_URL}/api/budgets/${id}`, {
         method: "DELETE",
@@ -219,13 +236,28 @@ const Budgets = () => {
       });
       if (res.ok) {
         fetchBudgets();
-        toast.update(toastId, { render: 'Budget deleted.', type: 'success', isLoading: false, autoClose: 2000 });
+        toast.update(toastId, {
+          render: "Budget deleted.",
+          type: "success",
+          isLoading: false,
+          autoClose: 2000,
+        });
       } else {
-        toast.update(toastId, { render: 'Failed to delete budget.', type: 'error', isLoading: false, autoClose: 3000 });
+        toast.update(toastId, {
+          render: "Failed to delete budget.",
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
       }
     } catch (err) {
       console.error("Error deleting budget:", err);
-      toast.update(toastId, { render: 'Connection error.', type: 'error', isLoading: false, autoClose: 3000 });
+      toast.update(toastId, {
+        render: "Connection error.",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
     }
   };
 
@@ -300,7 +332,8 @@ const Budgets = () => {
                   <p className="text-xs text-slate-500">
                     Visual share comparison across categorized limits (in ₹)
                   </p>
-                </div>                {/* Inject graph animations */}
+                </div>{" "}
+                {/* Inject graph animations */}
                 <style>{`
                   @keyframes drawLine {
                     from { stroke-dashoffset: 1200; }
@@ -311,20 +344,22 @@ const Budgets = () => {
                     to   { opacity: 1; }
                   }
                 `}</style>
-
                 {/* Smooth Curve SVG Graph */}
                 <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 relative h-64 overflow-hidden mt-4">
                   <div className="absolute inset-0 flex flex-col justify-between text-[10px] text-gray-400 py-6 px-4">
                     {(() => {
-                      const maxVal = Math.max(...budgets.map(b => Math.max(b.limit, b.spent)), 1);
-                      return ['Max', '75%', '50%', '25%', '0'].map((l, i) => (
+                      const maxVal = Math.max(
+                        ...budgets.map((b) => Math.max(b.limit, b.spent)),
+                        1,
+                      );
+                      return ["Max", "75%", "50%", "25%", "0"].map((l, i) => (
                         <span key={i}>
                           {i === 0 ? `₹${maxVal.toLocaleString()}` : l}
                         </span>
                       ));
                     })()}
                   </div>
-                  <div 
+                  <div
                     className="ml-10 h-full border-b border-l border-gray-200 relative pt-6 pb-6"
                     onMouseLeave={() => setHoverInfo(null)}
                   >
@@ -333,21 +368,32 @@ const Budgets = () => {
                       viewBox="0 0 400 100"
                       className="w-full h-full"
                       preserveAspectRatio="none"
-                      style={{ overflow: 'visible', cursor: 'crosshair' }}
+                      style={{ overflow: "visible", cursor: "crosshair" }}
                       onMouseMove={(e) => {
                         if (!budgets || budgets.length === 0) return;
                         const rect = e.currentTarget.getBoundingClientRect();
                         const mouseX = e.clientX - rect.left;
-                        const pct = Math.max(0, Math.min(1, mouseX / rect.width));
+                        const pct = Math.max(
+                          0,
+                          Math.min(1, mouseX / rect.width),
+                        );
                         const idx = Math.min(
                           Math.round(pct * (budgets.length - 1)),
-                          budgets.length - 1
+                          budgets.length - 1,
                         );
-                        const maxVal = Math.max(...budgets.map(b => Math.max(b.limit, b.spent)), 1);
-                        const pointX = budgets.length > 1 ? (idx / (budgets.length - 1)) * 400 : 200;
-                        const limitY = 100 - (budgets[idx].limit / maxVal) * (100 - 10) - 5;
-                        const spentY = 100 - (budgets[idx].spent / maxVal) * (100 - 10) - 5;
-                        
+                        const maxVal = Math.max(
+                          ...budgets.map((b) => Math.max(b.limit, b.spent)),
+                          1,
+                        );
+                        const pointX =
+                          budgets.length > 1
+                            ? (idx / (budgets.length - 1)) * 400
+                            : 200;
+                        const limitY =
+                          100 - (budgets[idx].limit / maxVal) * (100 - 10) - 5;
+                        const spentY =
+                          100 - (budgets[idx].spent / maxVal) * (100 - 10) - 5;
+
                         setHoverInfo({
                           idx,
                           svgX: pointX,
@@ -355,7 +401,7 @@ const Budgets = () => {
                           spentY,
                           limit: budgets[idx].limit,
                           spent: budgets[idx].spent,
-                          category: budgets[idx].category
+                          category: budgets[idx].category,
                         });
                       }}
                     >
@@ -455,9 +501,15 @@ const Budgets = () => {
                             {/* Hover vertical guide line */}
                             {hoverInfo && (
                               <line
-                                x1={hoverInfo.svgX} y1="0" x2={hoverInfo.svgX} y2="100"
-                                stroke="#7c3aed" strokeWidth="0.8" strokeDasharray="3 3"
-                                strokeOpacity="0.5" vectorEffect="non-scaling-stroke"
+                                x1={hoverInfo.svgX}
+                                y1="0"
+                                x2={hoverInfo.svgX}
+                                y2="100"
+                                stroke="#7c3aed"
+                                strokeWidth="0.8"
+                                strokeDasharray="3 3"
+                                strokeOpacity="0.5"
+                                vectorEffect="non-scaling-stroke"
                               />
                             )}
 
@@ -465,7 +517,9 @@ const Budgets = () => {
                             <path
                               d={limitAreaPath}
                               fill="url(#limitGradient)"
-                              style={{ animation: 'fadeArea 0.8s ease-out forwards' }}
+                              style={{
+                                animation: "fadeArea 0.8s ease-out forwards",
+                              }}
                             />
                             {/* Limit Line with draw-in transition */}
                             <path
@@ -476,14 +530,19 @@ const Budgets = () => {
                               vectorEffect="non-scaling-stroke"
                               strokeDasharray="5,5"
                               strokeDashoffset="1200"
-                              style={{ animation: 'drawLine 1.4s cubic-bezier(0.4,0,0.2,1) forwards' }}
+                              style={{
+                                animation:
+                                  "drawLine 1.4s cubic-bezier(0.4,0,0.2,1) forwards",
+                              }}
                             />
 
                             {/* Spent Area with fade transition */}
                             <path
                               d={spentAreaPath}
                               fill="url(#spentGradient)"
-                              style={{ animation: 'fadeArea 0.8s ease-out forwards' }}
+                              style={{
+                                animation: "fadeArea 0.8s ease-out forwards",
+                              }}
                             />
                             {/* Spent Line with draw-in transition */}
                             <path
@@ -493,7 +552,10 @@ const Budgets = () => {
                               strokeWidth="2.5"
                               vectorEffect="non-scaling-stroke"
                               strokeDashoffset="1200"
-                              style={{ animation: 'drawLine 1.4s cubic-bezier(0.4,0,0.2,1) 0.08s forwards' }}
+                              style={{
+                                animation:
+                                  "drawLine 1.4s cubic-bezier(0.4,0,0.2,1) 0.08s forwards",
+                              }}
                             />
 
                             {/* Hover data circles */}
@@ -531,13 +593,22 @@ const Budgets = () => {
                         style={{
                           left: `calc(${(hoverInfo.svgX / 400) * 100}% + 8px)`,
                           top: `calc(${(Math.min(hoverInfo.limitY, hoverInfo.spentY) / 100) * 100}% - 48px)`,
-                          transform: hoverInfo.svgX > 300 ? 'translateX(-110%)' : 'translateX(0)'
+                          transform:
+                            hoverInfo.svgX > 300
+                              ? "translateX(-110%)"
+                              : "translateX(0)",
                         }}
                       >
                         <div className="bg-slate-900 text-white text-[10px] font-bold px-3 py-2 rounded-xl shadow-xl whitespace-nowrap leading-relaxed">
-                          <div className="text-purple-300 font-extrabold capitalize border-b border-slate-700/50 pb-0.5 mb-1">{hoverInfo.category}</div>
-                          <div className="text-blue-300">Limit: ₹{hoverInfo.limit.toLocaleString()}</div>
-                          <div className="text-red-300">Spent: ₹{hoverInfo.spent.toLocaleString()}</div>
+                          <div className="text-purple-300 font-extrabold capitalize border-b border-slate-700/50 pb-0.5 mb-1">
+                            {hoverInfo.category}
+                          </div>
+                          <div className="text-blue-300">
+                            Limit: ₹{hoverInfo.limit.toLocaleString()}
+                          </div>
+                          <div className="text-red-300">
+                            Spent: ₹{hoverInfo.spent.toLocaleString()}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -565,7 +636,6 @@ const Budgets = () => {
                     </span>
                   </div>
                 </div>
-
                 {/* Responsive CSS grid-based bar chart */}
                 <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6">
                   <div className="space-y-5">
@@ -743,8 +813,6 @@ const Budgets = () => {
                 Adjust Budget Manually
               </h3>
 
-
-
               <form
                 onSubmit={handleSaveBudget}
                 className="space-y-4 text-xs font-semibold text-slate-500"
@@ -810,8 +878,6 @@ const Budgets = () => {
                 target across spending categories dynamically, matching your
                 historical 60-day ledger logs.
               </p>
-
-
 
               <form
                 onSubmit={handleAiAllocate}

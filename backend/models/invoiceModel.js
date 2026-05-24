@@ -146,6 +146,22 @@ const invoiceSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
+    blockchainHash: {
+      type: String,
+      default: "",
+    },
+    blockchainPreviousHash: {
+      type: String,
+      default: "",
+    },
+    blockchainBlockIndex: {
+      type: Number,
+      default: 0,
+    },
+    blockchainVerified: {
+      type: Boolean,
+      default: true,
+    },
     status: {
       type: String,
       enum: ['pending', 'processing', 'completed', 'failed'],

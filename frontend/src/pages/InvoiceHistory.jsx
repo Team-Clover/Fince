@@ -15,16 +15,20 @@ import {
   FiUser,
   FiLoader,
   FiBell,
+  FiShield,
 } from "react-icons/fi";
 import { LuScan } from "react-icons/lu";
+import { MdOutlineAccountBalanceWallet } from "react-icons/md";
 import { toast } from "react-toastify";
 
-const API_URL = "http://localhost:4000";
+const API_URL = "http://localhost:6000";
 
 const InvoiceHistory = () => {
   const { user } = useAuth();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [blockchainVerifying, setBlockchainVerifying] = useState(false);
+  const [blockchainResult, setBlockchainResult] = useState(null);
 
   // Search / Filter / Sort State
   const [search, setSearch] = useState("");
@@ -94,13 +98,21 @@ const InvoiceHistory = () => {
       });
       if (res.ok) {
         const data = await res.json();
-        setNotifications((data || []).map((alert, idx) => ({
-          id: alert._id || idx,
-          title: alert.type === 'budget_exceeded' ? 'Budget Exceeded' : 'Budget Alert',
-          desc: alert.message,
-          time: new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          read: alert.read || alert.isRead || false
-        })));
+        setNotifications(
+          (data || []).map((alert, idx) => ({
+            id: alert._id || idx,
+            title:
+              alert.type === "budget_exceeded"
+                ? "Budget Exceeded"
+                : "Budget Alert",
+            desc: alert.message,
+            time: new Date(alert.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            read: alert.read || alert.isRead || false,
+          })),
+        );
       }
     } catch (err) {
       console.error("Error fetching alerts:", err);
@@ -116,10 +128,50 @@ const InvoiceHistory = () => {
         },
       });
       if (res.ok) {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       }
     } catch (err) {
       console.error("Error marking alerts read:", err);
+    }
+  };
+
+  const handleVerifyBlockchain = async () => {
+    setBlockchainVerifying(true);
+    const toastId = toast.loading("Checking cryptographic block signatures...");
+    try {
+      const res = await fetch(`${API_URL}/api/invoices/verify-blockchain`, {
+        headers: {
+          token: localStorage.getItem("token") || "",
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setBlockchainResult(data);
+        toast.update(toastId, {
+          render:
+            "✅ Cryptographic ledger integrity verified. All blocks match hash signatures.",
+          type: "success",
+          isLoading: false,
+          autoClose: 4000,
+        });
+      } else {
+        toast.update(toastId, {
+          render: `⚠️ Ledger validation failed! ${data.message || "Integrity compromised."}`,
+          type: "error",
+          isLoading: false,
+          autoClose: 5000,
+        });
+      }
+    } catch (err) {
+      console.error("Blockchain verification error:", err);
+      toast.update(toastId, {
+        render: "❌ Connection to blockchain failed.",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } finally {
+      setBlockchainVerifying(false);
     }
   };
 
@@ -215,13 +267,21 @@ const InvoiceHistory = () => {
         {/* Top Header / Notification & Personal Section */}
         <div className="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Invoice History</h1>
-            <p className="text-slate-500 text-sm mt-1">Review your parsed AI invoices and ledger archive</p>
+            <h1 className="text-2xl font-bold text-slate-900">
+              Invoice History
+            </h1>
+            <p className="text-slate-500 text-sm mt-1">
+              Review your parsed AI invoices and ledger archive
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-4 py-2 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-sm rounded-full">
               <div className="w-2 h-2 rounded-full bg-pink-500 animate-pulse"></div>
-              {user?.userMode === 'family' ? 'Family Space' : user?.userMode === 'business' ? 'Business Space' : 'Personal Space'}
+              {user?.userMode === "family"
+                ? "Family Space"
+                : user?.userMode === "business"
+                  ? "Business Space"
+                  : "Personal Space"}
             </div>
 
             {/* Notification Bell Icon */}
@@ -298,7 +358,6 @@ const InvoiceHistory = () => {
                 </div>
               )}
             </div>
-
           </div>
         </div>
 
@@ -352,6 +411,20 @@ const InvoiceHistory = () => {
                     <option value="amount_asc">Lowest Amount</option>
                   </select>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={handleVerifyBlockchain}
+                  disabled={blockchainVerifying}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-4.5 py-2.5 rounded-xl text-xs shadow-sm transition-all cursor-pointer disabled:opacity-50 font-outfit select-none font-semibold whitespace-nowrap"
+                >
+                  {blockchainVerifying ? (
+                    <FiLoader className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <FiShield className="w-3.5 h-3.5 text-emerald-450" />
+                  )}
+                  Verify Ledger
+                </button>
               </div>
             </div>
 
@@ -388,19 +461,39 @@ const InvoiceHistory = () => {
                             key={inv._id}
                             className="hover:bg-slate-50/50 transition-colors"
                           >
-                            <td className="p-4 pl-6 font-semibold text-slate-900 max-w-[200px] truncate">
+                            <td className="p-4 pl-6 font-semibold text-slate-900 max-w-[220px]">
                               <div className="flex items-center gap-2">
                                 <FiFileText className="w-4 h-4 text-purple-500 shrink-0" />
-                                <span className="truncate" title={cleanName}>
-                                  {cleanName}
-                                </span>
+                                <div className="truncate">
+                                  <span
+                                    className="truncate block font-semibold text-slate-900"
+                                    title={cleanName}
+                                  >
+                                    {cleanName}
+                                  </span>
+                                  <div className="flex items-center gap-1.5 mt-0.5 select-none flex-wrap">
+                                    <span className="px-1.5 py-0.2 rounded-[3px] text-[7.5px] bg-emerald-50 border border-emerald-200 text-emerald-600 font-extrabold font-mono uppercase shrink-0">
+                                      Block #{inv.blockchainBlockIndex || 1}
+                                    </span>
+                                    <span
+                                      className="text-[7.5px] text-slate-400 font-mono font-bold block truncate max-w-[65px]"
+                                      title={inv.blockchainHash || "genesis"}
+                                    >
+                                      {inv.blockchainHash
+                                        ? inv.blockchainHash.substring(0, 8)
+                                        : "genesis"}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
                             </td>
                             <td className="p-4 font-outfit font-bold text-slate-800">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span>{inv.merchantName || "General Vendor"}</span>
+                                <span>
+                                  {inv.merchantName || "General Vendor"}
+                                </span>
                                 {inv.gstVerification?.isFakeInvoice && (
-                                  <span 
+                                  <span
                                     className="px-1.5 py-0.5 rounded text-[8px] bg-red-150 text-red-700 border border-red-200 font-extrabold cursor-help shrink-0"
                                     title={`Suspected Fake: ${inv.gstVerification.message}`}
                                   >
@@ -411,7 +504,7 @@ const InvoiceHistory = () => {
                             </td>
                             <td className="p-4 text-slate-550 font-mono font-medium">
                               {new Date(
-                                inv.invoiceDate || inv.createdAt
+                                inv.invoiceDate || inv.createdAt,
                               ).toLocaleDateString()}
                             </td>
                             <td className="p-4">
@@ -435,7 +528,9 @@ const InvoiceHistory = () => {
                                   <FiEye className="w-4 h-4" />
                                 </button>
                                 <button
-                                  onClick={() => handleDelete(inv._id, inv.merchantName)}
+                                  onClick={() =>
+                                    handleDelete(inv._id, inv.merchantName)
+                                  }
                                   className="p-2 rounded-xl border border-red-100 bg-red-50/30 text-red-500 hover:text-red-700 hover:bg-red-100/60 transition-all cursor-pointer flex items-center justify-center"
                                   title="Delete Record"
                                 >
@@ -487,59 +582,139 @@ const InvoiceHistory = () => {
                       SUSPECTED FAKE
                     </span>
                   )}
-                  <span className={`px-2 py-0.5 rounded-md text-[9px] font-extrabold border ${
-                    selectedInvoice.gstVerification?.status === 'VERIFIED'
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-600'
-                      : selectedInvoice.gstVerification?.status === 'INVALID'
-                      ? 'bg-red-50 border-red-200 text-red-600'
-                      : 'bg-slate-100 border-slate-250 text-slate-500'
-                  }`}>
-                    {selectedInvoice.gstVerification?.status || 'UNVERIFIED'}
+                  <span
+                    className={`px-2 py-0.5 rounded-md text-[9px] font-extrabold border ${
+                      selectedInvoice.gstVerification?.status === "VERIFIED"
+                        ? "bg-emerald-50 border-emerald-200 text-emerald-600"
+                        : selectedInvoice.gstVerification?.status === "INVALID"
+                          ? "bg-red-50 border-red-200 text-red-600"
+                          : "bg-slate-100 border-slate-250 text-slate-500"
+                    }`}
+                  >
+                    {selectedInvoice.gstVerification?.status || "UNVERIFIED"}
                   </span>
                 </div>
               </div>
 
-              {selectedInvoice.gstVerification?.status && selectedInvoice.gstVerification.status !== 'UNVERIFIED' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold text-slate-700">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Trade Name (Registry)</span>
-                    <span className="text-slate-800 font-bold block">{selectedInvoice.gstVerification.businessName || 'N/A'}</span>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Taxpayer Type</span>
-                    <span className="text-slate-800 font-bold block">{selectedInvoice.gstVerification.taxpayerType || 'N/A'}</span>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Registration State</span>
-                    <span className="text-slate-800 font-bold block">{selectedInvoice.gstVerification.stateCode || 'N/A'}</span>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Fraud Risk Assessment</span>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex-1 bg-slate-200 rounded-full h-2 overflow-hidden w-28">
-                        <div 
-                          className={`h-full rounded-full ${
-                            (selectedInvoice.fraudScore || 0) > 60 
-                              ? 'bg-red-500' 
-                              : (selectedInvoice.fraudScore || 0) > 30 
-                              ? 'bg-amber-500' 
-                              : 'bg-emerald-500'
-                          }`}
-                          style={{ width: `${selectedInvoice.fraudScore || 0}%` }}
-                        />
+              {selectedInvoice.gstVerification?.status &&
+                selectedInvoice.gstVerification.status !== "UNVERIFIED" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold text-slate-700">
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-slate-400 block uppercase font-bold">
+                        Trade Name (Registry)
+                      </span>
+                      <span className="text-slate-800 font-bold block">
+                        {selectedInvoice.gstVerification.businessName || "N/A"}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-slate-400 block uppercase font-bold">
+                        Taxpayer Type
+                      </span>
+                      <span className="text-slate-800 font-bold block">
+                        {selectedInvoice.gstVerification.taxpayerType || "N/A"}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-slate-400 block uppercase font-bold">
+                        Registration State
+                      </span>
+                      <span className="text-slate-800 font-bold block">
+                        {selectedInvoice.gstVerification.stateCode || "N/A"}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-slate-400 block uppercase font-bold">
+                        Fraud Risk Assessment
+                      </span>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex-1 bg-slate-200 rounded-full h-2 overflow-hidden w-28">
+                          <div
+                            className={`h-full rounded-full ${
+                              (selectedInvoice.fraudScore || 0) > 60
+                                ? "bg-red-500"
+                                : (selectedInvoice.fraudScore || 0) > 30
+                                  ? "bg-amber-500"
+                                  : "bg-emerald-500"
+                            }`}
+                            style={{
+                              width: `${selectedInvoice.fraudScore || 0}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="font-mono font-bold text-slate-800">
+                          {selectedInvoice.fraudScore || 0}%
+                        </span>
                       </div>
-                      <span className="font-mono font-bold text-slate-800">{selectedInvoice.fraudScore || 0}%</span>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {selectedInvoice.gstVerification?.message && (
                 <div className="p-3 bg-white border border-slate-150 rounded-xl text-[11px] text-slate-500 leading-relaxed font-medium">
-                  <strong className="text-slate-700 block mb-0.5">Audit Intelligence Logs:</strong>
+                  <strong className="text-slate-700 block mb-0.5">
+                    Audit Intelligence Logs:
+                  </strong>
                   {selectedInvoice.gstVerification.message}
                 </div>
               )}
+            </div>
+
+            {/* Blockchain Ledger Validation section in Modal */}
+            <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4 text-left">
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <h4 className="text-[10px] font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 font-mono">
+                  ⛓️ Cryptographic Ledger Block
+                </h4>
+                <div className="flex gap-2 items-center">
+                  <span
+                    className={`px-2 py-0.5 rounded-md text-[9px] font-extrabold border ${
+                      selectedInvoice.blockchainVerified !== false
+                        ? "bg-emerald-50 border-emerald-250 text-emerald-600"
+                        : "bg-red-50 border-red-200 text-red-650"
+                    }`}
+                  >
+                    {selectedInvoice.blockchainVerified !== false
+                      ? "LEDGER SECURED"
+                      : "INTEGRITY FAIL ⚠️"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold text-slate-700">
+                <div className="space-y-1">
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold">
+                    Block Position
+                  </span>
+                  <span className="text-slate-800 font-mono font-bold block">
+                    Index #{selectedInvoice.blockchainBlockIndex || 1}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold">
+                    Block Signature Hash
+                  </span>
+                  <span
+                    className="text-slate-800 font-mono text-[10px] block truncate font-bold"
+                    title={selectedInvoice.blockchainHash}
+                  >
+                    {selectedInvoice.blockchainHash ||
+                      "0000000000000000000000000000000000000000000000000000000000000000"}
+                  </span>
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold">
+                    Previous Linked Hash
+                  </span>
+                  <span
+                    className="text-slate-800 font-mono text-[10px] block truncate font-bold"
+                    title={selectedInvoice.blockchainPreviousHash}
+                  >
+                    {selectedInvoice.blockchainPreviousHash ||
+                      "0000000000000000000000000000000000000000000000000000000000000000"}
+                  </span>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-b border-slate-100 py-4 text-xs font-semibold">
@@ -557,7 +732,7 @@ const InvoiceHistory = () => {
                 </span>
                 <span className="text-slate-800 font-bold text-sm block">
                   {new Date(
-                    selectedInvoice.invoiceDate || selectedInvoice.createdAt
+                    selectedInvoice.invoiceDate || selectedInvoice.createdAt,
                   ).toDateString()}
                 </span>
               </div>
@@ -638,6 +813,137 @@ const InvoiceHistory = () => {
                 className="px-4 py-2.5 rounded-xl bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-600 hover:text-slate-950 font-bold shadow-sm transition-all cursor-pointer"
               >
                 Close Audit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Blockchain Verification Results Modal */}
+      {blockchainResult && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white max-w-2xl w-full p-8 border border-slate-200 rounded-3xl text-slate-800 space-y-6 max-h-[85vh] overflow-y-auto relative animate-scale-up shadow-2xl">
+            <button
+              onClick={() => setBlockchainResult(null)}
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all cursor-pointer"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+
+            <div className="text-center space-y-2">
+              <div className="mx-auto w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center text-white mb-2">
+                <FiShield
+                  className={`w-6 h-6 ${blockchainResult.success ? "text-emerald-400" : "text-red-500 animate-pulse"}`}
+                />
+              </div>
+              <h3 className="text-xl font-bold font-outfit text-slate-900">
+                Ledger Verification Scan
+              </h3>
+              <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                We have verified the cryptographic hashes and links of all
+                ledger blocks in this workspace.
+              </p>
+            </div>
+
+            {/* Status Card */}
+            <div
+              className={`p-4 rounded-2xl border text-center font-bold text-xs ${
+                blockchainResult.success
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                  : "bg-red-50 border-red-200 text-red-750"
+              }`}
+            >
+              {blockchainResult.message}
+            </div>
+
+            {/* Visual Blockchain */}
+            <div className="space-y-3">
+              <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-wider block text-left">
+                Secured Block History ({blockchainResult.details?.length || 0}{" "}
+                Blocks)
+              </h4>
+
+              <div className="space-y-4 max-h-72 overflow-y-auto pr-1">
+                {blockchainResult.details?.length === 0 ? (
+                  <div className="text-center text-xs text-slate-400 py-6 font-semibold">
+                    No block entries found. Sealing begins on confirmed
+                    invoices.
+                  </div>
+                ) : (
+                  blockchainResult.details.map((block, idx) => (
+                    <div
+                      key={block.index}
+                      className="relative flex gap-4 text-left"
+                    >
+                      {/* Connection Line */}
+                      {idx < blockchainResult.details.length - 1 && (
+                        <div className="absolute left-[17px] top-9 bottom-[-16px] w-[2px] bg-slate-200" />
+                      )}
+
+                      {/* Circle Block Node */}
+                      <div
+                        className={`w-9 h-9 rounded-full border-2 flex items-center justify-center font-mono font-bold text-xs shrink-0 select-none z-10 ${
+                          block.verified
+                            ? "bg-emerald-50 border-emerald-400 text-emerald-600"
+                            : "bg-red-50 border-red-400 text-red-650 animate-bounce"
+                        }`}
+                      >
+                        #{block.index}
+                      </div>
+
+                      {/* Content Card */}
+                      <div className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 hover:bg-slate-100/50 transition-colors shadow-sm">
+                        <div className="flex justify-between items-center flex-wrap gap-1">
+                          <span className="font-bold text-slate-900 text-xs">
+                            {block.merchant}
+                          </span>
+                          <span className="font-extrabold text-blue-600 text-xs font-mono">
+                            ₹{block.amount.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="space-y-1 font-mono text-[9px] text-slate-400">
+                          <div className="flex gap-2">
+                            <span className="font-bold uppercase tracking-tight text-slate-450 shrink-0">
+                              Block Hash:
+                            </span>
+                            <span
+                              className="text-slate-600 block truncate"
+                              title={block.storedHash}
+                            >
+                              {block.storedHash}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <span className="font-bold uppercase tracking-tight text-slate-450 shrink-0">
+                              Prev Hash:
+                            </span>
+                            <span
+                              className="text-slate-500 block truncate"
+                              title={
+                                block.linkMatch
+                                  ? "Link Match Successful"
+                                  : "Link Break Warning"
+                              }
+                            >
+                              {idx === 0
+                                ? "00000000000000000000000000000000..."
+                                : "Linked Block Signature OK"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="text-center pt-2">
+              <button
+                onClick={() => setBlockchainResult(null)}
+                className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-sm transition-all cursor-pointer"
+              >
+                Close Ledger Diagnostics
               </button>
             </div>
           </div>

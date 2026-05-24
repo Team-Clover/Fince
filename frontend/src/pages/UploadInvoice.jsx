@@ -15,9 +15,9 @@ import {
   FiUser,
 } from "react-icons/fi";
 import { LuScan } from "react-icons/lu";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 
-const API_URL = "http://localhost:4000";
+const API_URL = "http://localhost:6000";
 
 const UploadInvoice = () => {
   const { user } = useAuth();
@@ -124,18 +124,31 @@ const UploadInvoice = () => {
 
     // Simulated log stream scheduler
     const logTimeline = [
-      { progress: 15, log: "[OCR Engine] Extracting text clusters & bounds..." },
-      { progress: 30, log: "[OCR Engine] Page normalization completed (300 DPI)." },
-      { progress: 50, log: "[AI Classifier] Resolving merchant entity and category schema..." },
-      { progress: 75, log: "[Gemini-2.5-Flash] Parsing line items and tax components..." },
+      {
+        progress: 15,
+        log: "[OCR Engine] Extracting text clusters & bounds...",
+      },
+      {
+        progress: 30,
+        log: "[OCR Engine] Page normalization completed (300 DPI).",
+      },
+      {
+        progress: 50,
+        log: "[AI Classifier] Resolving merchant entity and category schema...",
+      },
+      {
+        progress: 75,
+        log: "[Gemini-2.5-Flash] Parsing line items and tax components...",
+      },
       { progress: 90, log: "[Gemini-2.5-Flash] Structuring ledger payload." },
     ];
 
     let timerIndex = 0;
     const interval = setInterval(() => {
-      if (timerIndex < logTimeline.length) {
-        setOcrProgress(logTimeline[timerIndex].progress);
-        setOcrLog((prev) => [...prev, logTimeline[timerIndex].log]);
+      const entry = logTimeline[timerIndex];
+      if (entry) {
+        setOcrProgress(entry.progress);
+        setOcrLog((prev) => [...prev, entry.log]);
         timerIndex++;
       } else {
         clearInterval(interval);
@@ -194,7 +207,7 @@ const UploadInvoice = () => {
       setItems(
         invoiceData.purchasedItems && invoiceData.purchasedItems.length > 0
           ? invoiceData.purchasedItems
-          : []
+          : [],
       );
 
       // Timeout transition to review step
@@ -222,7 +235,7 @@ const UploadInvoice = () => {
     if (field === "price" || field === "quantity") {
       const sum = updated.reduce(
         (total, item) => total + item.price * (item.quantity || 1),
-        0
+        0,
       );
       setAmount(Number((sum + Number(tax)).toFixed(2)));
     }
@@ -238,7 +251,7 @@ const UploadInvoice = () => {
     const updated = items.filter((_, i) => i !== idx);
     const sum = updated.reduce(
       (total, item) => total + item.price * (item.quantity || 1),
-      0
+      0,
     );
     setAmount(Number((sum + Number(tax)).toFixed(2)));
     setItems(updated);
@@ -249,7 +262,7 @@ const UploadInvoice = () => {
     setTax(newTax);
     const sum = items.reduce(
       (total, item) => total + item.price * (item.quantity || 1),
-      0
+      0,
     );
     setAmount(Number((sum + Number(newTax)).toFixed(2)));
   };
@@ -307,8 +320,12 @@ const UploadInvoice = () => {
         {/* Top Header / Notification & Personal Section */}
         <div className="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Upload Invoice</h1>
-            <p className="text-slate-500 text-sm mt-1">AI-powered receipt extraction and ledger entry</p>
+            <h1 className="text-2xl font-bold text-slate-900">
+              Upload Invoice
+            </h1>
+            <p className="text-slate-500 text-sm mt-1">
+              AI-powered receipt extraction and ledger entry
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 px-4 py-2 bg-pink-50 border border-pink-100 text-pink-600 font-bold text-sm rounded-full">
@@ -671,7 +688,11 @@ const UploadInvoice = () => {
                     Invoice Aggregate Total
                   </span>
                   <span className="text-2xl font-bold font-outfit text-slate-900">
-                    ₹{amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ₹
+                    {amount.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
                 <div className="flex gap-3 w-full sm:w-auto justify-end">

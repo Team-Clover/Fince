@@ -423,7 +423,7 @@ export async function analyzeInvoiceText(ocrText) {
   }
 
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const prompt = `
       You are an expert invoice parser. Parse the following OCR text extracted from an invoice or receipt into a structured JSON object.
       OCR Text:
@@ -482,7 +482,7 @@ export async function analyzeInvoiceText(ocrText) {
 // 2. Premium Direct Multimodal OCR & Structuring Engine
 export async function analyzeInvoiceMultimodal(fileBuffer, mimeType) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const filePart = {
       inlineData: {
         data: fileBuffer.toString("base64"),
@@ -654,7 +654,7 @@ export async function chatWithContext({
   budgetsContext,
 }) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const contextPrompt = `
       You are FINCE AI, a premium personal financial intelligence assistant.
       User's transaction and expense history:
@@ -766,7 +766,7 @@ export async function generateFinancialReport({
   period = "month",
 }) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const prompt = `
       You are FINCE AI. Generate a financial report in markdown format.
       Transactions: ${JSON.stringify(transactionsContext, null, 2)}
@@ -798,7 +798,7 @@ export async function allocateBudgetWithAi({
   categoriesList,
 }) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const prompt = `
       You are a smart financial budget allocator. Propose budget limits (numerical limits in INR) for a total monthly budget limit of ₹${totalLimit}.
       Historical category spending percentages: ${JSON.stringify(categoryPercentages)}
@@ -874,7 +874,7 @@ export async function generateSavingsAuditReport({
   username,
 }) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     const prompt = `
       Audit savings for user ${username}. This month: ${JSON.stringify(currentMonthData)}, Last month: ${JSON.stringify(lastMonthData)}
     `;

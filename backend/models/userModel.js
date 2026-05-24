@@ -49,6 +49,15 @@ const userSchema = new mongoose.Schema({
         enum: ['personal', 'business'],
         default: 'personal',
     },
+    tokenBalance: {
+        type: Number,
+        default: 0,
+    },
+    rewardLogs: [{
+        action: String,
+        amount: Number,
+        timestamp: { type: Date, default: Date.now }
+    }],
 }, {
     timestamps: true,
 });

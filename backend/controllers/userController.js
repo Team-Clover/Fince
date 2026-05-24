@@ -37,9 +37,13 @@ export const registerUserController = async (req, res) => {
 
     const token = generateToken(newUser._id);
 
+    // Don't return password hash in response
+    const safeUser = newUser.toObject();
+    delete safeUser.password;
+
     return res.json({
       success: true,
-      userData: newUser,
+      userData: safeUser,
       token,
       message: "Account created successfully",
     });
@@ -75,11 +79,19 @@ export const loginUserController = async (req, res) => {
       return res.json({ success: false, message: "Invalid credentials" });
     }
     const token = generateToken(userData._id);
-    // Send login notification email
-    await sendLoginEmail(userData.email, userData.fullName);
+
+    // Send login notification email in background (don't block login)
+    sendLoginEmail(userData.email, userData.fullName).catch((err) =>
+      console.error("Login email failed (non-blocking):", err.message)
+    );
+
+    // Don't return password hash in response
+    const safeUser = userData.toObject();
+    delete safeUser.password;
+
     return res.json({
       success: true,
-      userData,
+      userData: safeUser,
       token,
       message: "Login successful",
     });
@@ -216,14 +228,24 @@ export const walletLoginController = async (req, res) => {
 
     const cleanAddress = walletAddress.trim().toLowerCase();
 
+    // Validate Ethereum address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(cleanAddress)) {
+      return res.json({
+        success: false,
+        message: "Invalid Ethereum wallet address format",
+      });
+    }
+
     // Find existing user by walletAddress
     let user = await User.findOne({ walletAddress: cleanAddress });
 
     if (user) {
       const token = generateToken(user._id);
+      const safeUser = user.toObject();
+      delete safeUser.password;
       return res.json({
         success: true,
-        userData: user,
+        userData: safeUser,
         token,
         message: "Logged in via wallet successfully",
       });
@@ -237,9 +259,11 @@ export const walletLoginController = async (req, res) => {
       emailUser.walletAddress = cleanAddress;
       await emailUser.save();
       const token = generateToken(emailUser._id);
+      const safeUser = emailUser.toObject();
+      delete safeUser.password;
       return res.json({
         success: true,
-        userData: emailUser,
+        userData: safeUser,
         token,
         message: "Logged in via wallet successfully",
       });
@@ -267,9 +291,12 @@ export const walletLoginController = async (req, res) => {
 
     const token = generateToken(newUser._id);
 
+    const safeUser = newUser.toObject();
+    delete safeUser.password;
+
     return res.json({
       success: true,
-      userData: newUser,
+      userData: safeUser,
       token,
       message: "Wallet account registered successfully",
     });

@@ -10,6 +10,7 @@ import {
   FiCode,
   FiTrendingUp
 } from "react-icons/fi";
+import { Link } from "react-router-dom";
 
 const Home = ({ activeLayout = 1 }) => {
   // Light Dashboard Mockup
@@ -287,13 +288,13 @@ const Home = ({ activeLayout = 1 }) => {
 
       {/* CTA Buttons */}
       <div className="flex flex-col gap-4 sm:flex-row">
-        <a
-          href="/login"
+        <Link
+          to="/login"
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3.5 text-sm font-semibold !text-white shadow-md hover:from-blue-700 hover:to-purple-700 transition duration-200"
         >
           <FiUpload className="h-4 w-4" />
           <span>Upload Statement</span>
-        </a>
+        </Link>
         <a
           href="#download"
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-white px-6 py-3.5 text-sm font-semibold text-blue-600 hover:bg-blue-50/50 shadow-sm transition duration-200"
@@ -353,10 +354,10 @@ const Home = ({ activeLayout = 1 }) => {
               </p>
             </div>
             <div className="flex flex-col gap-4 sm:flex-row">
-              <a href="/login" className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-violet-650 px-6 py-3.5 text-sm font-semibold !text-white shadow-md transition">
+              <Link to="/login" className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-violet-650 px-6 py-3.5 text-sm font-semibold !text-white shadow-md transition">
                 <FiUpload className="h-4 w-4" />
                 <span>Upload Statement</span>
-              </a>
+              </Link>
               <a href="#download" className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-6 py-3.5 text-sm font-semibold text-slate-350 hover:text-white transition">
                 <FiSmartphone className="h-4 w-4" />
                 <span>Download App</span>
@@ -406,9 +407,9 @@ const Home = ({ activeLayout = 1 }) => {
               </p>
             </div>
             <div className="flex gap-4">
-              <a href="/login" className="bg-slate-900 hover:bg-blue-600 text-white font-bold text-xs uppercase tracking-wider px-6 py-4 transition duration-150">
+              <Link to="/login" className="bg-slate-900 hover:bg-blue-600 text-white font-bold text-xs uppercase tracking-wider px-6 py-4 transition duration-150">
                 UPLOAD_STATEMENT
-              </a>
+              </Link>
             </div>
           </div>
           <div className="relative group flex items-center justify-center z-10 w-full pr-8 md:pr-14 pb-10 border border-slate-100 p-4 bg-slate-50/50">
@@ -431,9 +432,9 @@ const Home = ({ activeLayout = 1 }) => {
               We extract details from bank statements instantly to deliver deep, actionable savings insights.
             </p>
             <div className="flex gap-6">
-              <a href="/login" className="text-blue-600 font-bold hover:underline text-sm flex items-center gap-1.5">
+              <Link to="/login" className="text-blue-600 font-bold hover:underline text-sm flex items-center gap-1.5">
                 Upload Statement <span className="text-base">→</span>
-              </a>
+              </Link>
             </div>
           </div>
           <div className="relative flex items-center justify-center w-full pr-8 pb-10">

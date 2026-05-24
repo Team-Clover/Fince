@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { FiMail, FiZap } from "react-icons/fi";
 import logo2 from "../assets/images/logo2.jpeg";
 
@@ -150,19 +151,19 @@ const LandingNav = () => {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-5">
-            <a
-              href="/login"
+            <Link
+              to="/login"
               className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 px-6 py-2.5 text-sm font-bold !text-white shadow-md hover:shadow-lg transition duration-200 hover:scale-[1.02] active:scale-[0.98]"
             >
               Sign In
-            </a>
-            <a
-              href="/register"
+            </Link>
+            <Link
+              to="/register"
               className="group inline-flex items-center justify-center gap-2 rounded-full bg-white border border-slate-200/80 hover:border-blue-500/50 px-7 py-3 text-base font-extrabold text-slate-900 shadow-md hover:shadow-lg hover:shadow-purple-500/10 transition-all duration-300 hover:scale-[1.03] active:scale-[0.97]"
             >
               <FiZap className="w-5 h-5 text-blue-600 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" />
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Get Free Analysis</span>
-            </a>
+            </Link>
           </div>
         </div>
       </div>

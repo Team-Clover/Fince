@@ -15,16 +15,20 @@ services:
       - key: MONGO_URI
         sync: false # Provide your MongoDB connection string in Render dashboard
 
-  # Frontend Static Site
+  # Frontend Web Service
   - type: web
     name: fince-frontend
-    runtime: static
+    runtime: node
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    startCommand: npm install -g serve && serve -s dist -l 3000
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        value: https://fince-backend.onrender.com
     routes:
-      # Rewrites all paths to index.html to support single-page application routing (React Router)
       - type: rewrite
         source: /*
         destination: /index.html

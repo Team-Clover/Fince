@@ -5,6 +5,7 @@ import Auth from "./pages/Auth.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import BusinessDashboard from "./pages/BusinessDashboard.jsx";
 import Chat from "./pages/Chat.jsx";
 import IncomeSetup from "./pages/IncomeSetup.jsx";
 import Budgets from "./pages/Budgets.jsx";
@@ -44,14 +45,71 @@ const App = () => {
       <Route path="/register" element={<Register />} />
 
       {/* Protected routes */}
-      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
-      <Route path="/transactions" element={<ProtectedRoute><IncomeSetup /></ProtectedRoute>} />
-      <Route path="/budgets" element={<ProtectedRoute><Budgets /></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-      <Route path="/upload" element={<ProtectedRoute><UploadInvoice /></ProtectedRoute>} />
-      <Route path="/history" element={<ProtectedRoute><InvoiceHistory /></ProtectedRoute>} />
-      
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/business-dashboard"
+        element={
+          <ProtectedRoute>
+            <BusinessDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute>
+            <Chat />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/transactions"
+        element={
+          <ProtectedRoute>
+            <IncomeSetup />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/budgets"
+        element={
+          <ProtectedRoute>
+            <Budgets />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/upload"
+        element={
+          <ProtectedRoute>
+            <UploadInvoice />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/history"
+        element={
+          <ProtectedRoute>
+            <InvoiceHistory />
+          </ProtectedRoute>
+        }
+      />
+
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

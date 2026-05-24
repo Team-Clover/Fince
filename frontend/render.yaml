@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: fence-frontend
+    env: node
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && npm install -g serve && serve -s dist -l 3000
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        value: https://your-backend-url.onrender.com
+    routes:
+      - path: /*
+        destination: /

@@ -8,7 +8,11 @@ let transporter;
 async function getTransporter() {
   if (transporter) return transporter;
 
-  if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  if (
+    process.env.EMAIL_HOST &&
+    process.env.EMAIL_USER &&
+    process.env.EMAIL_PASS
+  ) {
     transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: Number(process.env.EMAIL_PORT) || 587,
@@ -30,7 +34,9 @@ async function getTransporter() {
         pass: testAccount.pass,
       },
     });
-    console.log("⚙️ Using Ethereal test email account. Preview URL will be logged after sending.");
+    console.log(
+      "⚙️ Using Ethereal test email account. Preview URL will be logged after sending.",
+    );
   }
 
   return transporter;
@@ -46,7 +52,10 @@ export async function sendEmail(to, subject, text) {
   try {
     const transport = await getTransporter();
     const info = await transport.sendMail({
-      from: process.env.EMAIL_FROM || process.env.EMAIL_USER || "no-reply@fince.com",
+      from:
+        process.env.EMAIL_FROM ||
+        process.env.EMAIL_USER ||
+        "no-reply@fince.com",
       to,
       subject,
       text,
@@ -65,7 +74,7 @@ export async function sendEmail(to, subject, text) {
  * @param {string} name User's full name for personalization
  */
 export async function sendLoginEmail(to, name) {
-  const subject = "Login Notification";
-  const text = `Hello ${name},\n\nYou have successfully logged into Fince at ${new Date().toLocaleString()}. If this wasn't you, please secure your account immediately.\n\nBest regards,\nFince Team`;
+  const subject = "Welcome Back to Fince!";
+  const text = `Hi ${name},\n\nYou have just logged in to your Fince account.\n\nIf you are a business user, access your Business Dashboard for advanced analytics and team features.\n\nIf this login was not initiated by you, please reset your password immediately or contact support.\n\nThank you for choosing Fince!\n\nBest regards,\nFince Team`;
   await sendEmail(to, subject, text);
 }

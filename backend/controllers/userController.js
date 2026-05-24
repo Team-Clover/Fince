@@ -59,7 +59,10 @@ export const loginUserController = async (req, res) => {
     });
     const parseResult = loginSchema.safeParse(req.body);
     if (!parseResult.success) {
-      return res.json({ success: false, message: parseResult.error.errors.map(e => e.message).join(', ') });
+      return res.json({
+        success: false,
+        message: parseResult.error.errors.map((e) => e.message).join(", "),
+      });
     }
     const { email, password } = parseResult.data;
 
@@ -99,10 +102,10 @@ export const updateProfile = async (req, res) => {
 
     // Build the update object with only provided fields
     const updateFields = {};
-    if (fullName)  updateFields.fullName = fullName.trim();
-    if (email)     updateFields.email = email.trim().toLowerCase();
-    if (phone)     updateFields.phone = phone.trim();
-    if (username)  updateFields.username = username.trim();
+    if (fullName) updateFields.fullName = fullName.trim();
+    if (email) updateFields.email = email.trim().toLowerCase();
+    if (phone) updateFields.phone = phone.trim();
+    if (username) updateFields.username = username.trim();
 
     // Handle password separately (hash it)
     if (password && password.trim().length >= 6) {
@@ -113,14 +116,18 @@ export const updateProfile = async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       updateFields,
-      { new: true, select: '-password' } // never return password hash
+      { new: true, select: "-password" }, // never return password hash
     );
 
     if (!updatedUser) {
-      return res.json({ success: false, message: 'User not found' });
+      return res.json({ success: false, message: "User not found" });
     }
 
-    return res.json({ success: true, user: updatedUser, message: 'Profile updated successfully' });
+    return res.json({
+      success: true,
+      user: updatedUser,
+      message: "Profile updated successfully",
+    });
   } catch (error) {
     console.log(error.message);
     res.json({ success: false, message: error.message });
@@ -146,24 +153,27 @@ export const linkFamily = async (req, res) => {
     }
 
     const cleanCode = familyCode.trim().toUpperCase();
-    
+
     // Check if code exists on any user
     const codeExists = await User.findOne({ familyCode: cleanCode });
     if (!codeExists) {
-      return res.json({ success: false, message: "Family code not found. Make sure another member has it." });
+      return res.json({
+        success: false,
+        message: "Family code not found. Make sure another member has it.",
+      });
     }
 
     const userId = req.user._id || req.user.id;
     const user = await User.findByIdAndUpdate(
       userId,
       { familyCode: cleanCode },
-      { new: true }
+      { new: true },
     );
 
     res.json({
       success: true,
       message: `Successfully linked to family group ${cleanCode}`,
-      user
+      user,
     });
   } catch (error) {
     console.log(error.message);
@@ -179,13 +189,13 @@ export const leaveFamily = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       userId,
       { familyCode: newCode },
-      { new: true }
+      { new: true },
     );
 
     res.json({
       success: true,
       message: "Successfully left family group. New private code generated.",
-      user
+      user,
     });
   } catch (error) {
     console.log(error.message);
@@ -198,11 +208,14 @@ export const walletLoginController = async (req, res) => {
   const { walletAddress } = req.body;
   try {
     if (!walletAddress) {
-      return res.json({ success: false, message: "Wallet address is required" });
+      return res.json({
+        success: false,
+        message: "Wallet address is required",
+      });
     }
 
     const cleanAddress = walletAddress.trim().toLowerCase();
-    
+
     // Find existing user by walletAddress
     let user = await User.findOne({ walletAddress: cleanAddress });
 
@@ -234,17 +247,20 @@ export const walletLoginController = async (req, res) => {
 
     // Create new wallet user
     const salt = await bcrypt.genSalt(10);
-    const randomPassword = Math.random().toString(36) + Math.random().toString(36);
+    const randomPassword =
+      Math.random().toString(36) + Math.random().toString(36);
     const hashedPassword = await bcrypt.hash(randomPassword, salt);
     const familyCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 
     const shortAddress = `${cleanAddress.substring(0, 6)}...${cleanAddress.slice(-4)}`;
+    // Allow userMode to be set from request body, default to individual
+    const userMode = req.body.userMode || "individual";
     const newUser = await User.create({
       fullName: `Wallet User (${shortAddress})`,
       email: mockEmail,
       password: hashedPassword,
       phone: "0000000000",
-      userMode: "individual",
+      userMode,
       familyCode,
       walletAddress: cleanAddress,
     });
@@ -262,4 +278,3 @@ export const walletLoginController = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
-

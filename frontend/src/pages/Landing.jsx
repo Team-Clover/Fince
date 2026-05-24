@@ -16,6 +16,7 @@ import LandingNav from "../components/LandingNav";
 import FeatureCard from "../components/FeatureCard";
 import Home from "../components/Home";
 import Footer from "../components/Footer";
+import { Link } from "react-router-dom";
 
 const Landing = () => {
   // Stats Data
@@ -110,9 +111,9 @@ const Landing = () => {
             <p className="text-sm md:text-base text-slate-500 font-medium leading-relaxed">
               Our AI-powered process makes financial analysis effortless in just 4 simple steps.
             </p>
-            <a href="/register" className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-xs font-semibold !text-white shadow-sm hover:from-blue-700 hover:to-purple-700 transition duration-150">
+            <Link to="/register" className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-xs font-semibold !text-white shadow-sm hover:from-blue-700 hover:to-purple-700 transition duration-150">
               Get Started Now
-            </a>
+            </Link>
           </div>
 
           <div className="relative flex flex-col md:flex-row justify-between gap-6">
@@ -235,9 +236,9 @@ const Landing = () => {
                   </li>
                 </ul>
               </div>
-              <a href="/register" className="mt-8 inline-flex items-center justify-center rounded-xl border border-slate-200 hover:border-blue-500/50 py-3 text-xs font-bold text-slate-800 transition duration-150">
+              <Link to="/register" className="mt-8 inline-flex items-center justify-center rounded-xl border border-slate-200 hover:border-blue-500/50 py-3 text-xs font-bold text-slate-800 transition duration-150">
                 Get Started
-              </a>
+              </Link>
             </div>
 
             {/* Pro Plan */}
@@ -272,9 +273,9 @@ const Landing = () => {
                   </li>
                 </ul>
               </div>
-              <a href="/register" className="mt-8 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-3 text-xs font-bold !text-white shadow-sm transition duration-150">
+              <Link to="/register" className="mt-8 inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-3 text-xs font-bold !text-white shadow-sm transition duration-150">
                 Go Pro Now
-              </a>
+              </Link>
             </div>
 
             {/* Corporate Plan */}
@@ -301,9 +302,9 @@ const Landing = () => {
                   </li>
                 </ul>
               </div>
-              <a href="/register" className="mt-8 inline-flex items-center justify-center rounded-xl border border-slate-200 hover:border-blue-500/50 py-3 text-xs font-bold text-slate-800 transition duration-150">
+              <Link to="/register" className="mt-8 inline-flex items-center justify-center rounded-xl border border-slate-200 hover:border-blue-500/50 py-3 text-xs font-bold text-slate-800 transition duration-150">
                 Contact Enterprise
-              </a>
+              </Link>
             </div>
           </div>
         </section>
@@ -359,10 +360,10 @@ const Landing = () => {
               <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight sm:text-4xl leading-tight">Transform Financial Data into <br />Smart Insights</h2>
               <p className="text-slate-500 leading-relaxed font-medium text-sm md:text-base max-w-lg">Join thousands of users who trust our AI-powered platform for better financial decisions.</p>
               <div className="flex flex-col gap-4 sm:flex-row pt-2">
-                <a href="/login" className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-xs font-semibold !text-white shadow-sm hover:from-blue-700 hover:to-purple-700 transition duration-150">
+                <Link to="/login" className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-xs font-semibold !text-white shadow-sm hover:from-blue-700 hover:to-purple-700 transition duration-150">
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
                   <span>Upload Statement</span>
-                </a>
+                </Link>
               </div>
             </div>
           </div>

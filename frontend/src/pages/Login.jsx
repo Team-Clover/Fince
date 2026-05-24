@@ -35,9 +35,18 @@ const Login = () => {
   const [showDemoSelector, setShowDemoSelector] = useState(false);
 
   const demoWallets = [
-    { name: "Personal Ledger (Individual)", address: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F" },
-    { name: "Family Joint Ledger", address: "0x29029C8B568eD9D99FFc94c96568eD9D99FFc94c" },
-    { name: "Business Workspace Ledger", address: "0x32A39F75276eA39F75276eA39F75276eA39F7527" },
+    {
+      name: "Personal Ledger (Individual)",
+      address: "0x71C7656EC7ab88b098defB751B7401B5f6d8976F",
+    },
+    {
+      name: "Family Joint Ledger",
+      address: "0x29029C8B568eD9D99FFc94c96568eD9D99FFc94c",
+    },
+    {
+      name: "Business Workspace Ledger",
+      address: "0x32A39F75276eA39F75276eA39F75276eA39F7527",
+    },
   ];
 
   const hasMetaMask =
@@ -55,7 +64,13 @@ const Login = () => {
       const res = await login(email, password);
       if (res.success) {
         toast.success("Login successful! Redirecting...");
-        setTimeout(() => navigate("/dashboard"), 800);
+        // Check userMode for business
+        const userData = JSON.parse(localStorage.getItem("userData")) || null;
+        if (userData && userData.userMode === "business") {
+          setTimeout(() => navigate("/business-dashboard"), 800);
+        } else {
+          setTimeout(() => navigate("/dashboard"), 800);
+        }
       } else {
         toast.error(res.message || "Invalid credentials");
       }
@@ -77,20 +92,28 @@ const Login = () => {
     setWalletStatus("connecting");
     const toastId = toast.loading("Connecting to wallet...");
     try {
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      if (!accounts.length) throw new Error("No accounts found. Unlock MetaMask.");
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+      if (!accounts.length)
+        throw new Error("No accounts found. Unlock MetaMask.");
       const address = accounts[0];
       setWalletStatus("signing");
       toast.update(toastId, { render: "Prompting message signature..." });
       const message = `Welcome to Fince!\n\nNonce: ${Date.now()}`;
-      await window.ethereum.request({ method: "personal_sign", params: [message, address] });
+      await window.ethereum.request({
+        method: "personal_sign",
+        params: [message, address],
+      });
       toast.update(toastId, { render: "Authenticating on ledger..." });
       const res = await walletLogin(address);
       if (res.success) {
         setWalletStatus("success");
         toast.update(toastId, {
           render: `✅ Connected ${address.substring(0, 6)}...${address.slice(-4)}!`,
-          type: "success", isLoading: false, autoClose: 1500,
+          type: "success",
+          isLoading: false,
+          autoClose: 1500,
         });
         setTimeout(() => navigate("/dashboard"), 1500);
       } else {
@@ -100,7 +123,9 @@ const Login = () => {
       setWalletStatus("error");
       toast.update(toastId, {
         render: err.message || "Wallet connection failed",
-        type: "error", isLoading: false, autoClose: 4000,
+        type: "error",
+        isLoading: false,
+        autoClose: 4000,
       });
       setWalletLoading(false);
     }
@@ -119,22 +144,32 @@ const Login = () => {
       toast.update(toastId, { render: "Simulating signature validation..." });
       setTimeout(async () => {
         try {
-          const res = await walletLogin(addr);
+          const res = await walletLogin(address);
           if (res.success) {
             setWalletStatus("success");
             toast.update(toastId, {
-              render: `✅ Demo wallet ${addr.substring(0, 6)}...${addr.slice(-4)} connected!`,
+              render: `\u2705 Connected ${address.substring(0, 6)}...${address.slice(-4)}!`,
               type: "success", isLoading: false, autoClose: 1500,
             });
-            setTimeout(() => navigate("/dashboard"), 1500);
+            // Check userMode for business
+            const userData = JSON.parse(localStorage.getItem("userData")) || null;
+            if (userData && userData.userMode === "business") {
+              setTimeout(() => navigate("/business-dashboard"), 1500);
+            } else {
+              setTimeout(() => navigate("/dashboard"), 1500);
+            }
           } else {
+            throw new Error(res.message || "Wallet auth failed");
+          }
             throw new Error(res.message);
           }
         } catch (err) {
           setWalletStatus("error");
           toast.update(toastId, {
             render: err.message || "Simulated login failed",
-            type: "error", isLoading: false, autoClose: 4000,
+            type: "error",
+            isLoading: false,
+            autoClose: 4000,
           });
           setWalletLoading(false);
         }
@@ -149,18 +184,27 @@ const Login = () => {
       <div className="absolute bottom-[-10%] right-[-10%] w-[35rem] h-[35rem] bg-purple-500/5 blur-[120px] pointer-events-none" />
 
       <div className="bg-white border border-slate-100 rounded-3xl p-8 w-full max-w-md shadow-xl relative z-10 transition-all duration-500">
-
         {/* Logo */}
         <div className="flex flex-col items-center mb-6 text-center">
           <div className="w-14 h-14 rounded-2xl overflow-hidden border border-slate-200 shadow-md mb-4">
             {logo2 ? (
-              <img src={logo2} alt="Fince" className="w-full h-full object-cover" />
+              <img
+                src={logo2}
+                alt="Fince"
+                className="w-full h-full object-cover"
+              />
             ) : (
-              <div className="w-full h-full bg-gradient-to-tr from-blue-600 to-purple-500 flex items-center justify-center font-bold text-white text-xs">F</div>
+              <div className="w-full h-full bg-gradient-to-tr from-blue-600 to-purple-500 flex items-center justify-center font-bold text-white text-xs">
+                F
+              </div>
             )}
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Welcome to Fince</h1>
-          <p className="text-xs text-slate-500 mt-1 font-medium">Sign in to your financial workspace</p>
+          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+            Welcome to Fince
+          </h1>
+          <p className="text-xs text-slate-500 mt-1 font-medium">
+            Sign in to your financial workspace
+          </p>
         </div>
 
         {/* Tabs */}
@@ -192,9 +236,14 @@ const Login = () => {
           <form onSubmit={handleEmailLogin} className="space-y-4">
             {/* Email */}
             <div>
-              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Email Address</label>
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                Email Address
+              </label>
               <div className="relative">
-                <FiMail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+                <FiMail
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  size={15}
+                />
                 <input
                   type="email"
                   value={email}
@@ -208,9 +257,14 @@ const Login = () => {
 
             {/* Password */}
             <div>
-              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Password</label>
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                Password
+              </label>
               <div className="relative">
-                <FiLock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+                <FiLock
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  size={15}
+                />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
@@ -236,15 +290,22 @@ const Login = () => {
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3.5 px-6 rounded-2xl shadow-md transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:pointer-events-none text-sm cursor-pointer mt-2"
             >
               {emailLoading ? (
-                <><FiLoader className="animate-spin" size={16} /> Signing in...</>
+                <>
+                  <FiLoader className="animate-spin" size={16} /> Signing in...
+                </>
               ) : (
-                <>Sign In <FiArrowRight size={16} /></>
+                <>
+                  Sign In <FiArrowRight size={16} />
+                </>
               )}
             </button>
 
             <p className="text-center text-xs text-slate-500 pt-2">
               Don't have an account?{" "}
-              <Link to="/register" className="text-blue-600 font-bold hover:text-blue-700 transition-colors">
+              <Link
+                to="/register"
+                className="text-blue-600 font-bold hover:text-blue-700 transition-colors"
+              >
                 Create one
               </Link>
             </p>
@@ -256,11 +317,16 @@ const Login = () => {
           <div className="space-y-5">
             {/* Status display */}
             <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center text-center">
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-all duration-500 ${
-                walletStatus === "success" ? "bg-green-50 text-green-500"
-                  : walletStatus === "connecting" || walletStatus === "signing" ? "bg-blue-50 text-blue-500 animate-pulse"
-                  : "bg-purple-50 text-purple-600"
-              }`}>
+              <div
+                className={`w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-all duration-500 ${
+                  walletStatus === "success"
+                    ? "bg-green-50 text-green-500"
+                    : walletStatus === "connecting" ||
+                        walletStatus === "signing"
+                      ? "bg-blue-50 text-blue-500 animate-pulse"
+                      : "bg-purple-50 text-purple-600"
+                }`}
+              >
                 {walletStatus === "connecting" || walletStatus === "signing" ? (
                   <FiLoader className="w-7 h-7 animate-spin" />
                 ) : walletStatus === "success" ? (
@@ -277,11 +343,15 @@ const Login = () => {
                 {walletStatus === "error" && "Connection Denied"}
               </h3>
               <p className="text-[11px] text-slate-500 mt-1 leading-relaxed max-w-[220px]">
-                {walletStatus === "idle" && "Sign a passwordless cryptographic message with your wallet."}
-                {walletStatus === "connecting" && "Approve the connection in your wallet extension."}
-                {walletStatus === "signing" && "Sign the security message in your wallet."}
+                {walletStatus === "idle" &&
+                  "Sign a passwordless cryptographic message with your wallet."}
+                {walletStatus === "connecting" &&
+                  "Approve the connection in your wallet extension."}
+                {walletStatus === "signing" &&
+                  "Sign the security message in your wallet."}
                 {walletStatus === "success" && "Redirecting to workspace..."}
-                {walletStatus === "error" && "Authentication failed. Try again."}
+                {walletStatus === "error" &&
+                  "Authentication failed. Try again."}
               </p>
             </div>
 
@@ -295,7 +365,9 @@ const Login = () => {
 
             <div className="relative flex items-center py-1">
               <div className="flex-grow border-t border-slate-200" />
-              <span className="mx-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest flex-shrink">or simulated wallet</span>
+              <span className="mx-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest flex-shrink">
+                or simulated wallet
+              </span>
               <div className="flex-grow border-t border-slate-200" />
             </div>
 
@@ -308,7 +380,9 @@ const Login = () => {
               </button>
             ) : (
               <div className="space-y-3">
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Select Preset Account</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                  Select Preset Account
+                </span>
                 <div className="space-y-2">
                   {demoWallets.map((w) => (
                     <button
@@ -318,16 +392,24 @@ const Login = () => {
                       className="w-full p-3 bg-slate-50 border border-slate-200 hover:border-purple-400 rounded-xl text-left transition-all flex justify-between items-center group cursor-pointer"
                     >
                       <div>
-                        <div className="text-xs font-bold text-slate-800">{w.name}</div>
-                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">{w.address.substring(0, 8)}...{w.address.slice(-6)}</div>
+                        <div className="text-xs font-bold text-slate-800">
+                          {w.name}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">
+                          {w.address.substring(0, 8)}...{w.address.slice(-6)}
+                        </div>
                       </div>
-                      <span className="text-[10px] font-bold text-blue-600 group-hover:translate-x-1 transition-transform">Connect →</span>
+                      <span className="text-[10px] font-bold text-blue-600 group-hover:translate-x-1 transition-transform">
+                        Connect →
+                      </span>
                     </button>
                   ))}
                 </div>
 
                 <div className="pt-3 border-t border-slate-100">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-2">Custom Address</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-2">
+                    Custom Address
+                  </span>
                   <div className="flex gap-2">
                     <input
                       type="text"
@@ -357,15 +439,22 @@ const Login = () => {
             )}
 
             <div className="p-3 bg-blue-50/50 border border-blue-100/50 rounded-xl flex gap-2 items-start">
-              <FiInfo className="text-blue-500 mt-0.5 flex-shrink-0" size={13} />
+              <FiInfo
+                className="text-blue-500 mt-0.5 flex-shrink-0"
+                size={13}
+              />
               <p className="text-[10px] text-blue-600/80 leading-normal font-medium">
-                No private keys are ever read or transmitted. Fince uses cryptographic signatures only.
+                No private keys are ever read or transmitted. Fince uses
+                cryptographic signatures only.
               </p>
             </div>
 
             <p className="text-center text-xs text-slate-500">
               No account?{" "}
-              <Link to="/register" className="text-blue-600 font-bold hover:text-blue-700 transition-colors">
+              <Link
+                to="/register"
+                className="text-blue-600 font-bold hover:text-blue-700 transition-colors"
+              >
                 Register here
               </Link>
             </p>

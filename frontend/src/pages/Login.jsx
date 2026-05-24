@@ -144,11 +144,11 @@ const Login = () => {
       toast.update(toastId, { render: "Simulating signature validation..." });
       setTimeout(async () => {
         try {
-          const res = await walletLogin(address);
+          const res = await walletLogin(addr);
           if (res.success) {
             setWalletStatus("success");
             toast.update(toastId, {
-              render: `\u2705 Connected ${address.substring(0, 6)}...${address.slice(-4)}!`,
+              render: `\u2705 Connected ${addr.substring(0, 6)}...${addr.slice(-4)}!`,
               type: "success", isLoading: false, autoClose: 1500,
             });
             // Check userMode for business
@@ -160,8 +160,6 @@ const Login = () => {
             }
           } else {
             throw new Error(res.message || "Wallet auth failed");
-          }
-            throw new Error(res.message);
           }
         } catch (err) {
           setWalletStatus("error");
